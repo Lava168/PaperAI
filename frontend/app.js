@@ -264,6 +264,7 @@ async function runBackendRequest(executeModel) {
   } catch (error) {
     runMeta.className = "run-meta error";
     runMeta.textContent = `Backend run failed: ${error.message}`;
+    promptOutput.value = `Backend run failed:\n\n${error.message}\n\nIf you clicked Run Qwen, make sure DASHSCOPE_API_KEY is set before starting the backend.`;
   } finally {
     runBackendBtn.disabled = false;
     runQwenBtn.disabled = false;
