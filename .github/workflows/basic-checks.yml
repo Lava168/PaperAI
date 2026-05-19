@@ -1,0 +1,31 @@
+name: Basic Checks
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  python-syntax:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Check Python syntax
+        run: python -m py_compile backend/server.py
+
+      - name: Verify required docs exist
+        run: |
+          test -f README.md
+          test -f SYSTEM_OVERVIEW.md
+          test -f docs/DEVELOPMENT.md
+          test -f docs/PRODUCT_REQUIREMENTS.md
+          test -f docs/API_REFERENCE.md
