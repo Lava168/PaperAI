@@ -1,6 +1,21 @@
-# Frontend Console
+# PaperAI Local Frontend
 
-This is the browser frontend for operating the Scientific Paper Writing Agent System through the local backend.
+This folder contains the local single-page application for the Scientific Paper Writing Agent System.
+
+## What changed
+
+The frontend is now a complete local visual workspace instead of a simple three-column console.
+
+It includes:
+
+- Dashboard overview
+- Agent Center
+- New Paper Project form
+- Manuscript Workspace
+- Claim-Evidence Map editor
+- Reviewer risk panel
+- Browser-session Run History
+- Prompt generation, backend run, model run, copy, and download actions
 
 ## Start
 
@@ -16,45 +31,19 @@ Then open:
 http://127.0.0.1:8080/
 ```
 
-## How It Works
+No login, database, or cloud deployment is required.
 
-The frontend calls the local backend:
+## How it works
 
-1. Select the agent you want to use.
-2. Enter the paper title, topic, target venue, paper type, task, and materials.
-3. Click `Run Backend`.
-4. The backend loads the selected agent file and reference templates.
-5. The backend returns a Cursor-ready prompt.
-6. The frontend displays the returned Cursor-ready prompt.
+1. Open the local app.
+2. Choose a specialist writing agent in Agent Center.
+3. Create a paper project with title, topic, venue, paper type, task, and source materials.
+4. Add or edit claim-evidence rows.
+5. Generate a structured prompt or call the local backend.
+6. Review the output in Workspace.
+7. Copy or download the result as Markdown.
 
-You can then copy the prompt into Cursor when you want Cursor to execute the writing task.
-
-## Run Qwen Directly
-
-To call Qwen from the webpage, set your DashScope API key before starting the backend:
-
-```bash
-export DASHSCOPE_API_KEY="your_dashscope_key"
-export QWEN_MODEL="qwen3.6-max-preview"
-python backend/server.py
-```
-
-Then click `Run Qwen` in the frontend. The generated manuscript content appears in the webpage and downloads through your browser as a `.md` file. By default, the output is not saved on the server.
-
-Defaults:
-
-```text
-QWEN_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
-QWEN_MODEL=qwen3.6-max-preview
-```
-
-Alternative model names available in the frontend include `qwen-max-latest`, `qwen3-max`, `qwen-plus-latest`, and `qwen-turbo-latest`.
-
-## Why This Design
-
-This avoids API keys, authentication, remote deployment, and model-provider lock-in. The backend gives you a real local API while keeping the final writing execution under Cursor's control.
-
-## Backend API
+## Backend API used by the frontend
 
 ```text
 GET  /api/health
@@ -62,21 +51,31 @@ GET  /api/agents
 POST /api/run-agent
 ```
 
-The current request shape is:
+## Local storage
 
-```json
-{
-  "agentId": "results",
-  "projectPath": "/path/to/project",
-  "title": "Paper title",
-  "topic": "Paper topic",
-  "venue": "Nature Medicine",
-  "paperType": "Empirical research paper",
-  "desiredOutput": "Full manuscript draft",
-  "model": "qwen3.6-max-preview",
-  "task": "Write the Results section",
-  "materials": "paper/figures, outputs/summary.csv",
-  "executeModel": true,
-  "saveToServer": false
-}
+The frontend uses browser localStorage for:
+
+- Run history
+- Claim-evidence map rows
+
+This is intentionally local-only for the first version.
+
+## Frontend files
+
+```text
+frontend/
+  index.html   # SPA layout
+  styles.css   # visual design and responsive layout
+  app.js       # local state, navigation, backend calls, claim map, history
+  README.md
 ```
+
+## Design direction
+
+The goal is to make PaperAI feel like a usable local product while keeping the architecture simple:
+
+- No authentication
+- No database
+- No deployment dependency
+- No frontend build step
+- Still starts with `python backend/server.py`
