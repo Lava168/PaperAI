@@ -14,13 +14,19 @@ This system is designed for general scientific manuscripts, including empirical 
 - Figure and table writing guidance
 - Reviewer-style quality checks
 - Citation-safety rules
+- Local frontend console and backend API
+- Product, API, and development documentation
 
 ## Directory Structure
 
 ```text
-scientific-paper-writing-agent-system/
+PaperAI/
   README.md
   SYSTEM_OVERVIEW.md
+  CONTRIBUTING.md
+  LICENSE
+  .env.example
+  .gitignore
   agents/
     ORCHESTRATOR_AGENT.md
     LITERATURE_AGENT.md
@@ -41,11 +47,19 @@ scientific-paper-writing-agent-system/
     SUBMISSION_QUALITY_CHECKLIST.md
   config/
     agent_system.yaml
+  backend/
+    server.py
   frontend/
     index.html
     styles.css
     app.js
     README.md
+  docs/
+    DEVELOPMENT.md
+    PRODUCT_REQUIREMENTS.md
+    API_REFERENCE.md
+  .github/workflows/
+    basic-checks.yml
 ```
 
 ## Frontend Console
@@ -68,21 +82,7 @@ Use the frontend to enter a paper title/topic, select what content to generate, 
 
 By default, generated content is downloaded by the browser as a `.md` file. It is not saved on the server unless `saveToServer` is explicitly sent as `true` to the API.
 
-To call Qwen directly from the webpage, set your DashScope key before starting the backend:
-
-```bash
-export DASHSCOPE_API_KEY="your_dashscope_key"
-export QWEN_MODEL="qwen3.6-max-preview"
-python backend/server.py
-```
-
-The default China-region base URL is:
-
-```text
-https://dashscope.aliyuncs.com/compatible-mode/v1
-```
-
-You can override it with `QWEN_BASE_URL` if needed.
+To call Qwen directly from the webpage, configure your local environment before starting the backend. See `.env.example` for the available variables.
 
 Click `Run Qwen` in the frontend to generate manuscript content. The output will appear in the webpage and download through your browser.
 
@@ -93,6 +93,14 @@ GET  /api/health
 GET  /api/agents
 POST /api/run-agent
 ```
+
+## Documentation
+
+- `SYSTEM_OVERVIEW.md`: architecture and agent responsibilities
+- `docs/DEVELOPMENT.md`: local development guide
+- `docs/PRODUCT_REQUIREMENTS.md`: product goals, users, features, and success criteria
+- `docs/API_REFERENCE.md`: local backend API reference
+- `CONTRIBUTING.md`: contribution workflow and standards
 
 ## Recommended Use
 
