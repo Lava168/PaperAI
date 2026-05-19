@@ -3,171 +3,59 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Scientific Paper Writing Agent System</title>
+    <title>PaperAI Local Workspace</title>
     <link rel="stylesheet" href="styles.css" />
   </head>
   <body>
-    <header class="hero">
-      <div>
-        <p class="eyebrow">Agent Console</p>
-        <h1>Scientific Paper Writing Agent System</h1>
-        <p class="subtitle">
-          Select a writing agent, describe your manuscript task, and call the
-          local backend to create a saved agent run package.
-        </p>
-      </div>
-      <div class="hero-card">
-        <span class="status-dot"></span>
-        <span id="backendStatus">Checking backend...</span>
-      </div>
-    </header>
-
-    <main class="layout">
-      <section class="panel">
-        <div class="section-heading">
-          <p class="eyebrow">Step 1</p>
-          <h2>Select Agent</h2>
+    <div class="app-shell">
+      <aside class="sidebar">
+        <div class="brand-block">
+          <div class="brand-mark">P</div>
+          <div><p class="eyebrow">Local SPA</p><h1>PaperAI</h1></div>
         </div>
-        <div id="agentGrid" class="agent-grid"></div>
-      </section>
-
-      <section class="panel">
-        <div class="section-heading">
-          <p class="eyebrow">Step 2</p>
-          <h2>Describe Task</h2>
+        <nav class="nav-list">
+          <button class="nav-item active" data-section="dashboard">Dashboard</button>
+          <button class="nav-item" data-section="agents">Agent Center</button>
+          <button class="nav-item" data-section="project">New Paper Project</button>
+          <button class="nav-item" data-section="workspace">Workspace</button>
+          <button class="nav-item" data-section="claimMap">Claim Map</button>
+          <button class="nav-item" data-section="review">Review & History</button>
+        </nav>
+        <div class="sidebar-card">
+          <p class="eyebrow">Backend</p>
+          <div class="status-line"><span class="status-dot"></span><span id="backendStatus">Checking backend...</span></div>
+          <code>python backend/server.py</code>
         </div>
-
-        <form id="taskForm" class="form">
-          <label>
-            Project or manuscript path
-            <input
-              id="projectPath"
-              type="text"
-              value="/home/lry/atlas_guided_attention Alzheimer’s Disease Dynamics/chapter2_disentangle"
-            />
-          </label>
-
-          <label>
-            Paper title
-            <input
-              id="title"
-              type="text"
-              placeholder="e.g., Atlas-guided attention for clinically consistent Alzheimer's disease imaging"
-            />
-          </label>
-
-          <label>
-            Paper topic
-            <textarea
-              id="topic"
-              rows="4"
-              placeholder="Describe your research topic, hypothesis, datasets, method, and key message."
-            ></textarea>
-          </label>
-
-          <label>
-            Target venue or style
-            <input id="venue" type="text" placeholder="e.g., Nature Medicine, MICCAI, IEEE TMI, thesis chapter" />
-          </label>
-
-          <label>
-            Paper type
-            <select id="paperType">
-              <option>Empirical research paper</option>
-              <option>Method paper</option>
-              <option>Benchmark paper</option>
-              <option>Clinical or biomedical study</option>
-              <option>Review paper</option>
-              <option>Thesis chapter</option>
-            </select>
-          </label>
-
-          <label>
-            Content to generate
-            <select id="desiredOutput">
-              <option>Full manuscript draft</option>
-              <option>Abstract</option>
-              <option>Introduction</option>
-              <option>Related Work</option>
-              <option>Methods</option>
-              <option>Experiments and Results</option>
-              <option>Discussion and Conclusion</option>
-              <option>Figure captions and table notes</option>
-              <option>Reviewer-style revision report</option>
-            </select>
-          </label>
-
-          <label>
-            Qwen model
-            <select id="model">
-              <option value="qwen3.6-max-preview">qwen3.6-max-preview (strongest preview)</option>
-              <option value="qwen-max-latest">qwen-max-latest</option>
-              <option value="qwen3-max">qwen3-max</option>
-              <option value="qwen-plus-latest">qwen-plus-latest</option>
-              <option value="qwen-turbo-latest">qwen-turbo-latest</option>
-            </select>
-          </label>
-
-          <label>
-            What should the agent do?
-            <textarea
-              id="task"
-              rows="7"
-              placeholder="Example: Write standalone captions for all figures in paper/figures and check whether each caption supports the manuscript claims."
-            ></textarea>
-          </label>
-
-          <label>
-            Materials, figures, tables, or notes
-            <textarea
-              id="materials"
-              rows="6"
-              placeholder="List files, result tables, figure names, manuscript sections, or notes the agent should read."
-            ></textarea>
-          </label>
-        </form>
-      </section>
-
-      <section class="panel output-panel">
-        <div class="section-heading">
-          <p class="eyebrow">Step 3</p>
-          <h2>Backend Run</h2>
-        </div>
-
-        <div class="button-row">
-          <button id="generateBtn" class="primary" type="button">Generate Prompt</button>
-          <button id="runBackendBtn" class="primary secondary-primary" type="button">Run Backend</button>
-          <button id="runQwenBtn" class="primary qwen-primary" type="button">Run Qwen</button>
-          <button id="copyBtn" type="button">Copy Prompt</button>
-          <button id="downloadBtn" type="button">Download Result</button>
-          <button id="resetBtn" type="button">Reset</button>
-        </div>
-
-        <div id="runMeta" class="run-meta">No backend run yet.</div>
-        <textarea id="promptOutput" rows="18" spellcheck="false"></textarea>
-
-        <div class="usage-box">
-          <h3>How to operate the agent system</h3>
-          <ol>
-            <li>Start the backend with <code>python backend/server.py</code>.</li>
-            <li>Select the agent that matches your writing task.</li>
-            <li>Enter your paper title/topic and choose what content to generate.</li>
-            <li>Click <strong>Run Backend</strong> to test the local backend without a model key.</li>
-            <li>Click <strong>Run Qwen</strong> to generate manuscript text after setting <code>DASHSCOPE_API_KEY</code>.</li>
-            <li>The result downloads through your browser instead of being saved on the server.</li>
-          </ol>
-        </div>
-      </section>
-    </main>
-
-    <section class="workflow">
-      <div class="section-heading">
-        <p class="eyebrow">System Workflow</p>
-        <h2>Recommended Manuscript Pipeline</h2>
-      </div>
-      <div id="workflowSteps" class="workflow-grid"></div>
-    </section>
-
+      </aside>
+      <main class="main-panel">
+        <header class="topbar">
+          <div><p class="eyebrow">Scientific Paper Writing Agent System</p><h2 id="pageTitle">Dashboard</h2></div>
+          <div class="topbar-actions">
+            <button id="generateBtn" class="ghost" type="button">Generate Prompt</button>
+            <button id="runBackendBtn" class="primary" type="button">Run Backend</button>
+            <button id="runModelBtn" class="primary purple" type="button">Run Model</button>
+          </div>
+        </header>
+        <section id="dashboard" class="view active-view">
+          <div class="hero-card wide">
+            <div><p class="eyebrow">Workspace overview</p><h3>Turn research materials into manuscript-ready sections.</h3><p>Use a local visual workspace to select agents, define a paper project, generate prompts, run the backend, and track evidence quality.</p></div>
+            <div class="hero-actions"><button class="primary" data-jump="project" type="button">Create Project</button><button class="ghost" data-jump="agents" type="button">Browse Agents</button></div>
+          </div>
+          <div class="metric-grid">
+            <article class="metric-card"><span>Agents</span><strong id="agentCount">9</strong><small>specialized writing roles</small></article>
+            <article class="metric-card"><span>Selected Agent</span><strong id="selectedAgentMetric">Orchestrator</strong><small>current workflow owner</small></article>
+            <article class="metric-card"><span>Runs</span><strong id="runCount">0</strong><small>browser-session runs</small></article>
+            <article class="metric-card"><span>Evidence Items</span><strong id="claimCount">0</strong><small>claim map rows</small></article>
+          </div>
+          <div class="two-column"><section class="panel"><div class="section-heading"><p class="eyebrow">Pipeline</p><h3>Manuscript workflow</h3></div><div id="workflowSteps" class="timeline"></div></section><section class="panel"><div class="section-heading"><p class="eyebrow">Next action</p><h3>Start with structure</h3></div><div class="checklist"><label><input type="checkbox" checked /> Define title, topic, paper type, and venue.</label><label><input type="checkbox" /> Add figures, tables, datasets, and notes.</label><label><input type="checkbox" /> Generate a claim-evidence map.</label><label><input type="checkbox" /> Run reviewer and citation checks.</label></div></section></div>
+        </section>
+        <section id="agents" class="view"><div class="section-heading"><p class="eyebrow">Agent Center</p><h3>Choose the right specialist for the writing task.</h3></div><div id="agentGrid" class="agent-grid"></div></section>
+        <section id="project" class="view"><div class="section-heading"><p class="eyebrow">New Paper Project</p><h3>Describe the manuscript, target venue, and source materials.</h3></div><form id="taskForm" class="form-grid"><label>Project path<input id="projectPath" type="text" placeholder="/path/to/your/research/project" /></label><label>Paper title<input id="title" type="text" placeholder="Working paper title" /></label><label class="span-2">Paper topic<textarea id="topic" rows="4" placeholder="Describe topic, hypothesis, datasets, method, and key message."></textarea></label><label>Target venue or style<input id="venue" type="text" placeholder="Journal, conference, preprint, or thesis chapter" /></label><label>Paper type<select id="paperType"><option>Empirical research paper</option><option>Method paper</option><option>Benchmark paper</option><option>Clinical or biomedical study</option><option>Review paper</option><option>Thesis chapter</option></select></label><label>Content to generate<select id="desiredOutput"><option>Full manuscript draft</option><option>Abstract</option><option>Introduction</option><option>Related Work</option><option>Methods</option><option>Experiments and Results</option><option>Discussion and Conclusion</option><option>Figure captions and table notes</option><option>Reviewer-style revision report</option></select></label><label>Model<select id="model"><option value="qwen3.6-max-preview">qwen3.6-max-preview</option><option value="qwen-max-latest">qwen-max-latest</option><option value="qwen3-max">qwen3-max</option><option value="qwen-plus-latest">qwen-plus-latest</option><option value="qwen-turbo-latest">qwen-turbo-latest</option></select></label><label class="span-2">Agent task<textarea id="task" rows="5" placeholder="What should the selected agent do?"></textarea></label><label class="span-2">Materials<textarea id="materials" rows="5" placeholder="List files, result tables, figure names, manuscript sections, or notes."></textarea></label></form></section>
+        <section id="workspace" class="view"><div class="workspace-grid"><section class="panel"><div class="section-heading compact-heading"><div><p class="eyebrow">Manuscript Workspace</p><h3>Prompt and output</h3></div><div class="button-row"><button id="copyBtn" type="button">Copy</button><button id="downloadBtn" type="button">Download</button><button id="resetBtn" type="button">Reset</button></div></div><div id="runMeta" class="run-meta">No backend run yet.</div><textarea id="promptOutput" spellcheck="false"></textarea></section><aside class="panel inspector"><p class="eyebrow">Inspector</p><h3 id="inspectorAgent">Orchestrator Agent</h3><p id="inspectorUse">Coordinate a full manuscript from materials to revision plan.</p><div class="mini-list"><span>English output</span><span>Evidence-first drafting</span><span>Citation safety checks</span><span>Markdown output</span></div></aside></div></section>
+        <section id="claimMap" class="view"><div class="section-heading compact-heading"><div><p class="eyebrow">Claim-Evidence Map</p><h3>Track claims, evidence, citation status, and risk.</h3></div><button id="addClaimBtn" class="primary" type="button">Add Claim</button></div><div class="table-wrap"><table><thead><tr><th>Claim</th><th>Evidence</th><th>Citation Status</th><th>Risk</th><th></th></tr></thead><tbody id="claimTableBody"></tbody></table></div></section>
+        <section id="review" class="view"><div class="two-column"><section class="panel"><div class="section-heading"><p class="eyebrow">Reviewer Lens</p><h3>Common risks</h3></div><div id="riskList" class="risk-list"></div></section><section class="panel"><div class="section-heading compact-heading"><div><p class="eyebrow">Run History</p><h3>Browser-session history</h3></div><button id="clearHistoryBtn" type="button">Clear</button></div><div id="historyList" class="history-list"></div></section></div></section>
+      </main>
+    </div>
     <script src="app.js"></script>
   </body>
 </html>
