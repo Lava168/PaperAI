@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Scientific Paper Writing Agent System</title>
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <header class="hero">
+      <div>
+        <p class="eyebrow">Agent Console</p>
+        <h1>Scientific Paper Writing Agent System</h1>
+        <p class="subtitle">
+          Select a writing agent, describe your manuscript task, and call the
+          local backend to create a saved agent run package.
+        </p>
+      </div>
+      <div class="hero-card">
+        <span class="status-dot"></span>
+        <span id="backendStatus">Checking backend...</span>
+      </div>
+    </header>
+
+    <main class="layout">
+      <section class="panel">
+        <div class="section-heading">
+          <p class="eyebrow">Step 1</p>
+          <h2>Select Agent</h2>
+        </div>
+        <div id="agentGrid" class="agent-grid"></div>
+      </section>
+
+      <section class="panel">
+        <div class="section-heading">
+          <p class="eyebrow">Step 2</p>
+          <h2>Describe Task</h2>
+        </div>
+
+        <form id="taskForm" class="form">
+          <label>
+            Project or manuscript path
+            <input
+              id="projectPath"
+              type="text"
+              value="/home/lry/atlas_guided_attention Alzheimer’s Disease Dynamics/chapter2_disentangle"
+            />
+          </label>
+
+          <label>
+            Paper title
+            <input
+              id="title"
+              type="text"
+              placeholder="e.g., Atlas-guided attention for clinically consistent Alzheimer's disease imaging"
+            />
+          </label>
+
+          <label>
+            Paper topic
+            <textarea
+              id="topic"
+              rows="4"
+              placeholder="Describe your research topic, hypothesis, datasets, method, and key message."
+            ></textarea>
+          </label>
+
+          <label>
+            Target venue or style
+            <input id="venue" type="text" placeholder="e.g., Nature Medicine, MICCAI, IEEE TMI, thesis chapter" />
+          </label>
+
+          <label>
+            Paper type
+            <select id="paperType">
+              <option>Empirical research paper</option>
+              <option>Method paper</option>
+              <option>Benchmark paper</option>
+              <option>Clinical or biomedical study</option>
+              <option>Review paper</option>
+              <option>Thesis chapter</option>
+            </select>
+          </label>
+
+          <label>
+            Content to generate
+            <select id="desiredOutput">
+              <option>Full manuscript draft</option>
+              <option>Abstract</option>
+              <option>Introduction</option>
+              <option>Related Work</option>
+              <option>Methods</option>
+              <option>Experiments and Results</option>
+              <option>Discussion and Conclusion</option>
+              <option>Figure captions and table notes</option>
+              <option>Reviewer-style revision report</option>
+            </select>
+          </label>
+
+          <label>
+            Qwen model
+            <select id="model">
+              <option value="qwen3.6-max-preview">qwen3.6-max-preview (strongest preview)</option>
+              <option value="qwen-max-latest">qwen-max-latest</option>
+              <option value="qwen3-max">qwen3-max</option>
+              <option value="qwen-plus-latest">qwen-plus-latest</option>
+              <option value="qwen-turbo-latest">qwen-turbo-latest</option>
+            </select>
+          </label>
+
+          <label>
+            What should the agent do?
+            <textarea
+              id="task"
+              rows="7"
+              placeholder="Example: Write standalone captions for all figures in paper/figures and check whether each caption supports the manuscript claims."
+            ></textarea>
+          </label>
+
+          <label>
+            Materials, figures, tables, or notes
+            <textarea
+              id="materials"
+              rows="6"
+              placeholder="List files, result tables, figure names, manuscript sections, or notes the agent should read."
+            ></textarea>
+          </label>
+        </form>
+      </section>
+
+      <section class="panel output-panel">
+        <div class="section-heading">
+          <p class="eyebrow">Step 3</p>
+          <h2>Backend Run</h2>
+        </div>
+
+        <div class="button-row">
+          <button id="generateBtn" class="primary" type="button">Generate Prompt</button>
+          <button id="runBackendBtn" class="primary secondary-primary" type="button">Run Backend</button>
+          <button id="runQwenBtn" class="primary qwen-primary" type="button">Run Qwen</button>
+          <button id="copyBtn" type="button">Copy Prompt</button>
+          <button id="downloadBtn" type="button">Download Result</button>
+          <button id="resetBtn" type="button">Reset</button>
+        </div>
+
+        <div id="runMeta" class="run-meta">No backend run yet.</div>
+        <textarea id="promptOutput" rows="18" spellcheck="false"></textarea>
+
+        <div class="usage-box">
+          <h3>How to operate the agent system</h3>
+          <ol>
+            <li>Start the backend with <code>python backend/server.py</code>.</li>
+            <li>Select the agent that matches your writing task.</li>
+            <li>Enter your paper title/topic and choose what content to generate.</li>
+            <li>Click <strong>Run Qwen</strong> to generate manuscript text.</li>
+            <li>The result downloads through your browser instead of being saved on the server.</li>
+            <li>Use <strong>Run Backend</strong> only when you want to generate the prompt without calling Qwen.</li>
+          </ol>
+        </div>
+      </section>
+    </main>
+
+    <section class="workflow">
+      <div class="section-heading">
+        <p class="eyebrow">System Workflow</p>
+        <h2>Recommended Manuscript Pipeline</h2>
+      </div>
+      <div id="workflowSteps" class="workflow-grid"></div>
+    </section>
+
+    <script src="app.js"></script>
+  </body>
+</html>

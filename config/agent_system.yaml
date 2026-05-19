@@ -1,0 +1,49 @@
+system:
+  name: scientific-paper-writing-agent-system
+  language: English
+  scope: general scientific paper writing
+  default_workflow: workflows/PAPER_WORKFLOW.md
+
+principles:
+  - evidence_linked_claims
+  - citation_integrity
+  - cautious_scientific_language
+  - reproducible_methods
+  - reviewer_ready_revision
+
+agents:
+  orchestrator:
+    file: agents/ORCHESTRATOR_AGENT.md
+    use_when: starting or coordinating a full manuscript
+  literature:
+    file: agents/LITERATURE_AGENT.md
+    use_when: writing introduction, related work, or checking novelty
+  outline:
+    file: agents/OUTLINE_AGENT.md
+    use_when: planning structure, title, abstract, and section order
+  methods:
+    file: agents/METHODS_AGENT.md
+    use_when: writing reproducible methods from materials
+  results:
+    file: agents/RESULTS_AGENT.md
+    use_when: writing results from tables, figures, and metrics
+  figure_table:
+    file: agents/FIGURE_TABLE_AGENT.md
+    use_when: writing captions, table titles, and table notes
+  discussion:
+    file: agents/DISCUSSION_AGENT.md
+    use_when: writing discussion, limitations, future work, and conclusion
+  citation:
+    file: agents/CITATION_AGENT.md
+    use_when: checking citations and missing references
+  reviewer:
+    file: agents/REVIEWER_AGENT.md
+    use_when: reviewing a draft before submission
+
+templates:
+  manuscript: templates/MANUSCRIPT_TEMPLATE.md
+  claim_evidence_map: templates/CLAIM_EVIDENCE_MAP.md
+  figure_table: templates/FIGURE_TABLE_TEMPLATE.md
+
+checklists:
+  submission_quality: checklists/SUBMISSION_QUALITY_CHECKLIST.md
