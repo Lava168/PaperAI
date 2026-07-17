@@ -1,156 +1,114 @@
-# Scientific Paper Writing Agent System
+# PaperAI
 
-A repository-style agent workflow for writing, revising, and quality-checking English scientific papers.
+PaperAI is a standalone, evidence-first scientific writing agent. It turns research files into traceable manuscript artifacts through a persistent multi-agent workflow rather than a single prompt.
 
-This system is designed for general scientific manuscripts, including empirical papers, benchmark papers, method papers, clinical/biomedical studies, computational research, and thesis chapters. It does not replace the researcher; it structures the writing process so each claim is tied to evidence, citations are handled cautiously, figures and tables are explained clearly, and the final manuscript is reviewer-ready.
+## What it does
 
-## What This System Provides
+- Creates persistent paper projects backed by SQLite
+- Extracts text from PDF, DOCX, XLSX, CSV, TSV, PPTX, Markdown, text, and source files
+- Coordinates nine specialist agents across resumable workflows
+- Preserves every intermediate artifact and run event
+- Stops after outline and peer review for optional human approval
+- Flags unsupported content as `[EVIDENCE NEEDED]`, `[CITATION NEEDED]`, or `[METHOD DETAIL NEEDED]`
+- Searches Crossref metadata and resolves DOI records
+- Works with Qwen, OpenAI, or another OpenAI-compatible chat-completions API
+- Exports Markdown, Word, and LaTeX
+- Provides a local browser workspace and documented REST API
 
-- A multi-agent writing workflow
-- Agent role definitions and reusable prompts
-- A complete manuscript drafting pipeline
-- Section-level writing templates
-- Claim-evidence mapping templates
-- Figure and table writing guidance
-- Reviewer-style quality checks
-- Citation-safety rules
-- Local frontend console and backend API
-- Product, API, and development documentation
-
-## Directory Structure
+## Agent workflow
 
 ```text
-PaperAI/
-  README.md
-  SYSTEM_OVERVIEW.md
-  CONTRIBUTING.md
-  LICENSE
-  .env.example
-  .gitignore
-  agents/
-    ORCHESTRATOR_AGENT.md
-    LITERATURE_AGENT.md
-    OUTLINE_AGENT.md
-    METHODS_AGENT.md
-    RESULTS_AGENT.md
-    FIGURE_TABLE_AGENT.md
-    DISCUSSION_AGENT.md
-    REVIEWER_AGENT.md
-    CITATION_AGENT.md
-  workflows/
-    PAPER_WORKFLOW.md
-  templates/
-    MANUSCRIPT_TEMPLATE.md
-    CLAIM_EVIDENCE_MAP.md
-    FIGURE_TABLE_TEMPLATE.md
-  checklists/
-    SUBMISSION_QUALITY_CHECKLIST.md
-  config/
-    agent_system.yaml
-  backend/
-    server.py
-  frontend/
-    index.html
-    styles.css
-    app.js
-    README.md
-  docs/
-    DEVELOPMENT.md
-    PRODUCT_REQUIREMENTS.md
-    API_REFERENCE.md
-  .github/workflows/
-    basic-checks.yml
+Research files
+    ↓
+Intake → Claim–Evidence Map → Outline → Literature
+    ↓
+Methods → Results → Figures & Tables → Discussion
+    ↓
+Citation Audit → Peer Review → Final Manuscript
 ```
 
-## Frontend Console
+The full workflow uses the Orchestrator, Literature, Outline, Methods, Results, Figure & Table, Discussion, Citation, and Reviewer agents. All generated steps are stored separately and supplied as context to later steps.
 
-This repository includes a local frontend and backend for operating the agent system.
+## Quick start
 
-Start it from the repository root:
+Requires Python 3.10 or later.
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+cp .env.example .env
+```
+
+Load the variables from `.env` in your shell, set `PAPERAI_MODEL_API_KEY`, then run:
 
 ```bash
 python backend/server.py
 ```
 
-Open:
+Open `http://127.0.0.1:8080`. API documentation is available at `http://127.0.0.1:8080/docs`.
 
-```text
-http://127.0.0.1:8080/
+If no model key is configured, choose **Prompt only** in the interface. PaperAI will execute the same workflow and export self-contained prompt packages for another model or coding agent.
+
+## Model configuration
+
+PaperAI uses the OpenAI-compatible `POST /chat/completions` protocol:
+
+```dotenv
+PAPERAI_MODEL_BASE_URL=https://dashscope.aliyuncs.com/compatible-mode/v1
+PAPERAI_MODEL_API_KEY=your-key
+PAPERAI_MODEL=qwen-plus
 ```
 
-Use the frontend to enter a paper title/topic, select what content to generate, and call the backend. The backend reads the selected agent instructions and reference templates, then either returns a Cursor-ready prompt or calls Qwen to generate manuscript text.
+Aliases for the original `DASHSCOPE_API_KEY`, `QWEN_BASE_URL`, and `QWEN_MODEL` variables remain supported.
 
-By default, generated content is downloaded by the browser as a `.md` file. It is not saved on the server unless `saveToServer` is explicitly sent as `true` to the API.
+## Data and privacy
 
-To call Qwen directly from the webpage, configure your local environment before starting the backend. See `.env.example` for the available variables.
+Project metadata, extracted text, run state, and outputs are stored under `data/` by default. Uploaded files are not sent anywhere except the configured model API as part of the run context. Crossref endpoints only receive explicit literature search queries or DOI lookups.
 
-Click `Run Qwen` in the frontend to generate manuscript content. The output will appear in the webpage and download through your browser.
+For sensitive or unpublished research, configure a trusted private model endpoint and protect the service behind authentication before exposing it beyond localhost.
 
-Backend API:
+## API summary
 
-```text
-GET  /api/health
-GET  /api/agents
-POST /api/run-agent
+| Endpoint | Purpose |
+| --- | --- |
+| `POST /api/projects` | Create a paper project |
+| `POST /api/projects/{id}/documents` | Upload and extract a source file |
+| `POST /api/projects/{id}/runs` | Start a workflow |
+| `GET /api/runs/{id}` | Read status and artifacts |
+| `POST /api/runs/{id}/resume` | Approve or reject a checkpoint |
+| `GET /api/runs/{id}/export?format=docx` | Export the manuscript |
+| `GET /api/literature/search?q=...` | Search Crossref metadata |
+| `GET /api/literature/doi/{doi}` | Resolve a DOI |
+
+See `docs/API_REFERENCE.md` for request examples.
+
+## Development
+
+```bash
+pip install -r requirements-dev.txt
+pytest -q
+ruff check backend tests
 ```
 
-## Documentation
+## Docker
 
-- `SYSTEM_OVERVIEW.md`: architecture and agent responsibilities
-- `docs/DEVELOPMENT.md`: local development guide
-- `docs/PRODUCT_REQUIREMENTS.md`: product goals, users, features, and success criteria
-- `docs/API_REFERENCE.md`: local backend API reference
-- `CONTRIBUTING.md`: contribution workflow and standards
-
-## Recommended Use
-
-Use the orchestrator first:
-
-```text
-Read agents/ORCHESTRATOR_AGENT.md and workflows/PAPER_WORKFLOW.md.
-Help me draft a paper from the materials in [project path].
-Target venue/style: [journal/conference/preprint/thesis].
-Output language: English.
+```bash
+docker compose up --build
 ```
 
-Then call specialized agents as needed:
+The container stores persistent state in the `paperai-data` volume and serves PaperAI on port 8080.
 
-```text
-Use agents/RESULTS_AGENT.md to write the Results section from these tables and figures.
-```
+## Deploy to Render
 
-```text
-Use agents/FIGURE_TABLE_AGENT.md to write standalone captions for all figures.
-```
+The repository includes a production-oriented `render.yaml` Blueprint. It creates a Docker web service, checks `/api/health`, and mounts a 1 GB persistent disk at `/app/data` so projects, uploads, and SQLite state survive restarts.
 
-```text
-Use agents/REVIEWER_AGENT.md to review the manuscript like a critical peer reviewer.
-```
+1. Push the repository to GitHub.
+2. In Render, choose **New → Blueprint** and connect this repository.
+3. Enter `PAPERAI_MODEL_API_KEY` when Render asks for the unsynced secret.
+4. Apply the Blueprint and wait for the health check to pass.
 
-## Core Principle
-
-Every scientific claim must be traceable to one of the following:
-
-- A result table
-- A figure
-- A statistical test
-- A method description
-- A verified citation
-- A stated limitation
-
-If the evidence is missing, mark the claim as `[EVIDENCE NEEDED]` or `[CITATION NEEDED]`.
-
-## Output Standard
-
-The system should produce writing that is:
-
-- Accurate
-- Cautious
-- Evidence-linked
-- Citation-aware
-- Section-appropriate
-- Reviewer-ready
-- Free of unsupported novelty claims
+The Blueprint uses a paid Starter web service because Render does not support persistent disks on Free web services. Use a private or trusted OpenAI-compatible model endpoint for unpublished research.
 
 ## License
 

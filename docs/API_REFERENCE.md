@@ -1,85 +1,81 @@
 # API Reference
 
-The local backend is implemented in `backend/server.py` and serves both the frontend and API routes.
+Base URL: `http://127.0.0.1:8080`. Interactive OpenAPI documentation is served at `/docs`.
 
-## Base URL
+## Create a project
+
+```http
+POST /api/projects
+Content-Type: application/json
+
+{
+  "title": "A robust scientific agent",
+  "topic": "Evaluation of evidence-grounded manuscript generation",
+  "venue": "Target journal",
+  "paper_type": "method",
+  "language": "English",
+  "instructions": "Do not change the registered primary outcome."
+}
+```
+
+## Upload a source
+
+```bash
+curl -F 'file=@results.xlsx' http://127.0.0.1:8080/api/projects/PROJECT_ID/documents
+```
+
+Supported extensions are PDF, DOCX, XLSX/XLSM, CSV/TSV, PPTX, Markdown, text, TeX, JSON, YAML, XML, HTML, Python, and R. The per-file limit is 50 MB.
+
+## Start a workflow
+
+```http
+POST /api/projects/PROJECT_ID/runs
+Content-Type: application/json
+
+{
+  "workflow": "full_paper",
+  "execution_mode": "model",
+  "human_review": true
+}
+```
+
+Available workflows: `full_paper`, `outline`, `methods`, `results`, and `review`. Use `prompt` execution mode when a model key is unavailable.
+
+The endpoint returns `202 Accepted`. Poll `GET /api/runs/RUN_ID` or fetch incremental events from `GET /api/runs/RUN_ID/events?after=EVENT_ID`.
+
+## Resume a checkpoint
+
+```http
+POST /api/runs/RUN_ID/resume
+Content-Type: application/json
+
+{
+  "approved": true,
+  "feedback": "Keep the novelty claim conservative and add the ablation limitation."
+}
+```
+
+Sending `approved: false` moves the run to `cancelled`.
+
+## Export
 
 ```text
-http://127.0.0.1:8080
+GET /api/runs/RUN_ID/export?format=md
+GET /api/runs/RUN_ID/export?format=docx
+GET /api/runs/RUN_ID/export?format=tex
 ```
 
-## GET `/api/health`
+If a `final_manuscript` artifact exists it is exported directly. Otherwise all relevant artifacts are combined into a review bundle.
 
-Returns backend health information.
+## Literature metadata
 
-### Example response
-
-```json
-{
-  "ok": true,
-  "service": "paperai"
-}
+```text
+GET /api/literature/search?q=evidence-grounded+scientific+writing&rows=8
+GET /api/literature/doi/10.1000/example
 ```
 
-## GET `/api/agents`
+These endpoints retrieve Crossref metadata. Metadata resolution confirms that a bibliographic record exists; it does not establish that the work supports a particular manuscript claim.
 
-Returns the available writing agents and their descriptions.
+## Compatibility endpoint
 
-### Example response
-
-```json
-{
-  "agents": [
-    {
-      "id": "orchestrator",
-      "name": "Orchestrator Agent",
-      "use": "Coordinate a full manuscript from materials to revision plan."
-    }
-  ]
-}
-```
-
-## POST `/api/run-agent`
-
-Builds or runs an agent task based on the selected agent and user input.
-
-### Request body
-
-```json
-{
-  "agentId": "orchestrator",
-  "title": "Example paper title",
-  "topic": "Example research topic",
-  "venue": "Target journal or conference",
-  "paperType": "Empirical paper",
-  "task": "Draft an outline and claim-evidence map",
-  "materials": "List of available figures, tables, notes, and files",
-  "desiredOutput": "Markdown outline",
-  "mode": "prompt"
-}
-```
-
-### Important fields
-
-| Field | Description |
-|---|---|
-| `agentId` | Selected agent key, such as `orchestrator`, `methods`, or `reviewer` |
-| `title` | Working manuscript title |
-| `topic` | Research topic or study description |
-| `venue` | Target venue or writing style |
-| `paperType` | Study or manuscript type |
-| `task` | Specific task for the agent |
-| `materials` | Source materials the user wants the agent to use |
-| `desiredOutput` | Expected output format |
-| `mode` | Usually `prompt`; model-backed generation can be configured separately |
-
-## Error handling
-
-The backend should return clear JSON errors for invalid agent IDs, malformed input, or unavailable model configuration.
-
-## Design notes
-
-- Keep API responses easy for the frontend to render.
-- Avoid storing user materials by default.
-- Keep generated outputs traceable to the selected agent and workflow files.
-- Prefer Markdown output for portability.
+The original `POST /api/run-agent` endpoint remains available for simple single-agent prompt/model calls. New integrations should use projects and runs.

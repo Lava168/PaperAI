@@ -1,0 +1,18 @@
+services:
+  paperai:
+    build: .
+    ports:
+      - "8080:8080"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      PAPERAI_HOST: 0.0.0.0
+      PAPERAI_DATA_DIR: /app/data
+      PAPERAI_DATABASE: /app/data/paperai.db
+    volumes:
+      - paperai-data:/app/data
+    restart: unless-stopped
+
+volumes:
+  paperai-data:

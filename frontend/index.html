@@ -1,61 +1,108 @@
 <!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>PaperAI Local Workspace</title>
-    <link rel="stylesheet" href="styles.css" />
-  </head>
-  <body>
-    <div class="app-shell">
-      <aside class="sidebar">
-        <div class="brand-block">
-          <div class="brand-mark">P</div>
-          <div><p class="eyebrow">Local SPA</p><h1>PaperAI</h1></div>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta name="description" content="PaperAI evidence-first autonomous scientific writing agent">
+  <title>PaperAI · Scientific Writing Agent</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <div class="shell">
+    <aside class="sidebar">
+      <a class="brand" href="/">
+        <span class="brand-mark">P</span>
+        <span><strong>PaperAI</strong><small>Scientific Agent</small></span>
+      </a>
+      <button class="primary full" id="newProjectBtn">＋ 新建论文项目</button>
+      <div class="side-label">项目</div>
+      <nav id="projectList" class="project-list"></nav>
+      <div class="connection"><span id="healthDot"></span><div><strong id="healthText">正在连接</strong><small id="modelText">检查服务状态…</small></div></div>
+    </aside>
+
+    <main class="main">
+      <header class="topbar">
+        <div><span class="eyebrow">EVIDENCE-FIRST WORKSPACE</span><h1 id="pageTitle">科研写作，从证据开始</h1></div>
+        <div class="top-actions" id="exportActions" hidden>
+          <a class="button ghost" id="exportMd">Markdown</a>
+          <a class="button ghost" id="exportDocx">Word</a>
+          <a class="button ghost" id="exportTex">LaTeX</a>
         </div>
-        <nav class="nav-list">
-          <button class="nav-item active" data-section="dashboard">Dashboard</button>
-          <button class="nav-item" data-section="agents">Agent Center</button>
-          <button class="nav-item" data-section="project">New Paper Project</button>
-          <button class="nav-item" data-section="workspace">Workspace</button>
-          <button class="nav-item" data-section="claimMap">Claim Map</button>
-          <button class="nav-item" data-section="review">Review & History</button>
-        </nav>
-        <div class="sidebar-card">
-          <p class="eyebrow">Backend</p>
-          <div class="status-line"><span class="status-dot"></span><span id="backendStatus">Checking backend...</span></div>
-          <code>python backend/server.py</code>
+      </header>
+
+      <section id="emptyView" class="hero">
+        <div class="hero-copy">
+          <span class="pill">独立科研论文 Agent</span>
+          <h2>把研究材料变成<br><em>可核验的论文。</em></h2>
+          <p>上传论文、表格、实验记录与代码说明。PaperAI 会自动建立观点—证据关系，协调九个专业 Agent，并在提交前进行引用审计和同行评审。</p>
+          <button class="primary" id="heroNewBtn">创建第一个项目</button>
         </div>
-      </aside>
-      <main class="main-panel">
-        <header class="topbar">
-          <div><p class="eyebrow">Scientific Paper Writing Agent System</p><h2 id="pageTitle">Dashboard</h2></div>
-          <div class="topbar-actions">
-            <button id="generateBtn" class="ghost" type="button">Generate Prompt</button>
-            <button id="runBackendBtn" class="primary" type="button">Run Backend</button>
-            <button id="runModelBtn" class="primary purple" type="button">Run Model</button>
+        <div class="agent-orbit" aria-label="Agent workflow">
+          <div class="core">PaperAI<small>Orchestrator</small></div>
+          <span style="--i:0">提纲</span><span style="--i:1">方法</span><span style="--i:2">结果</span><span style="--i:3">图表</span><span style="--i:4">讨论</span><span style="--i:5">引用</span><span style="--i:6">审稿</span><span style="--i:7">文献</span>
+        </div>
+      </section>
+
+      <section id="workspaceView" hidden>
+        <div class="stats">
+          <div><span>材料</span><strong id="documentCount">0</strong><small>已提取文件</small></div>
+          <div><span>运行</span><strong id="runCount">0</strong><small>Agent 工作流</small></div>
+          <div><span>当前进度</span><strong id="progressCount">—</strong><small id="progressLabel">尚未运行</small></div>
+        </div>
+
+        <div class="workspace-grid">
+          <div class="column">
+            <article class="card">
+              <div class="card-head"><div><span class="step">01</span><h3>研究材料</h3></div><label class="upload button ghost">上传文件<input id="fileInput" type="file" multiple accept=".pdf,.docx,.xlsx,.xlsm,.csv,.tsv,.txt,.md,.tex,.pptx,.json,.yaml,.yml"></label></div>
+              <p class="muted">支持 PDF、Word、Excel、CSV、Markdown、PPTX 等，单文件最大 50 MB。</p>
+              <div id="documentList" class="document-list"></div>
+            </article>
+
+            <article class="card">
+              <div class="card-head"><div><span class="step">02</span><h3>启动 Agent</h3></div></div>
+              <div class="form-row">
+                <label>工作流<select id="workflowSelect"><option value="full_paper">完整论文</option><option value="outline">提纲与证据图谱</option><option value="methods">方法写作</option><option value="results">结果与图表</option><option value="review">论文审稿</option></select></label>
+                <label>执行方式<select id="modeSelect"><option value="model">调用模型</option><option value="prompt">仅生成 Prompt</option></select></label>
+              </div>
+              <label class="check"><input id="reviewCheck" type="checkbox" checked><span>在提纲和同行评审后等待人工确认</span></label>
+              <button class="primary full" id="runBtn">启动多 Agent 工作流</button>
+              <p id="runHint" class="hint"></p>
+            </article>
           </div>
-        </header>
-        <section id="dashboard" class="view active-view">
-          <div class="hero-card wide">
-            <div><p class="eyebrow">Workspace overview</p><h3>Turn research materials into manuscript-ready sections.</h3><p>Use a local visual workspace to select agents, define a paper project, generate prompts, run the backend, and track evidence quality.</p></div>
-            <div class="hero-actions"><button class="primary" data-jump="project" type="button">Create Project</button><button class="ghost" data-jump="agents" type="button">Browse Agents</button></div>
+
+          <div class="column wide">
+            <article class="card run-card">
+              <div class="card-head"><div><span class="step">03</span><h3>运行中心</h3></div><select id="runSelect" class="compact"><option value="">暂无运行</option></select></div>
+              <div id="runEmpty" class="run-empty">启动工作流后，这里会实时显示 Agent 进度与产物。</div>
+              <div id="runDetail" hidden>
+                <div class="run-summary"><div><span id="statusBadge" class="status">QUEUED</span><strong id="currentStep">准备开始</strong></div><span id="progressText">0%</span></div>
+                <div class="progress"><i id="progressBar"></i></div>
+                <div id="approvalBox" class="approval" hidden><strong>需要你的确认</strong><textarea id="feedbackInput" placeholder="可选：写下修改意见，后续 Agent 会读取它。"></textarea><div><button class="button danger" id="rejectBtn">终止</button><button class="primary" id="approveBtn">批准并继续</button></div></div>
+                <div id="timeline" class="timeline"></div>
+              </div>
+            </article>
+
+            <article class="card output-card">
+              <div class="card-head"><div><span class="step">04</span><h3>Agent 产物</h3></div><select id="artifactSelect" class="compact"><option value="">选择产物</option></select></div>
+              <pre id="artifactContent">这里将显示每个 Agent 生成的 Markdown 内容。</pre>
+            </article>
           </div>
-          <div class="metric-grid">
-            <article class="metric-card"><span>Agents</span><strong id="agentCount">9</strong><small>specialized writing roles</small></article>
-            <article class="metric-card"><span>Selected Agent</span><strong id="selectedAgentMetric">Orchestrator</strong><small>current workflow owner</small></article>
-            <article class="metric-card"><span>Runs</span><strong id="runCount">0</strong><small>browser-session runs</small></article>
-            <article class="metric-card"><span>Evidence Items</span><strong id="claimCount">0</strong><small>claim map rows</small></article>
-          </div>
-          <div class="two-column"><section class="panel"><div class="section-heading"><p class="eyebrow">Pipeline</p><h3>Manuscript workflow</h3></div><div id="workflowSteps" class="timeline"></div></section><section class="panel"><div class="section-heading"><p class="eyebrow">Next action</p><h3>Start with structure</h3></div><div class="checklist"><label><input type="checkbox" checked /> Define title, topic, paper type, and venue.</label><label><input type="checkbox" /> Add figures, tables, datasets, and notes.</label><label><input type="checkbox" /> Generate a claim-evidence map.</label><label><input type="checkbox" /> Run reviewer and citation checks.</label></div></section></div>
-        </section>
-        <section id="agents" class="view"><div class="section-heading"><p class="eyebrow">Agent Center</p><h3>Choose the right specialist for the writing task.</h3></div><div id="agentGrid" class="agent-grid"></div></section>
-        <section id="project" class="view"><div class="section-heading"><p class="eyebrow">New Paper Project</p><h3>Describe the manuscript, target venue, and source materials.</h3></div><form id="taskForm" class="form-grid"><label>Project path<input id="projectPath" type="text" placeholder="/path/to/your/research/project" /></label><label>Paper title<input id="title" type="text" placeholder="Working paper title" /></label><label class="span-2">Paper topic<textarea id="topic" rows="4" placeholder="Describe topic, hypothesis, datasets, method, and key message."></textarea></label><label>Target venue or style<input id="venue" type="text" placeholder="Journal, conference, preprint, or thesis chapter" /></label><label>Paper type<select id="paperType"><option>Empirical research paper</option><option>Method paper</option><option>Benchmark paper</option><option>Clinical or biomedical study</option><option>Review paper</option><option>Thesis chapter</option></select></label><label>Content to generate<select id="desiredOutput"><option>Full manuscript draft</option><option>Abstract</option><option>Introduction</option><option>Related Work</option><option>Methods</option><option>Experiments and Results</option><option>Discussion and Conclusion</option><option>Figure captions and table notes</option><option>Reviewer-style revision report</option></select></label><label>Model<select id="model"><option value="qwen3.6-max-preview">qwen3.6-max-preview</option><option value="qwen-max-latest">qwen-max-latest</option><option value="qwen3-max">qwen3-max</option><option value="qwen-plus-latest">qwen-plus-latest</option><option value="qwen-turbo-latest">qwen-turbo-latest</option></select></label><label class="span-2">Agent task<textarea id="task" rows="5" placeholder="What should the selected agent do?"></textarea></label><label class="span-2">Materials<textarea id="materials" rows="5" placeholder="List files, result tables, figure names, manuscript sections, or notes."></textarea></label></form></section>
-        <section id="workspace" class="view"><div class="workspace-grid"><section class="panel"><div class="section-heading compact-heading"><div><p class="eyebrow">Manuscript Workspace</p><h3>Prompt and output</h3></div><div class="button-row"><button id="copyBtn" type="button">Copy</button><button id="downloadBtn" type="button">Download</button><button id="resetBtn" type="button">Reset</button></div></div><div id="runMeta" class="run-meta">No backend run yet.</div><textarea id="promptOutput" spellcheck="false"></textarea></section><aside class="panel inspector"><p class="eyebrow">Inspector</p><h3 id="inspectorAgent">Orchestrator Agent</h3><p id="inspectorUse">Coordinate a full manuscript from materials to revision plan.</p><div class="mini-list"><span>English output</span><span>Evidence-first drafting</span><span>Citation safety checks</span><span>Markdown output</span></div></aside></div></section>
-        <section id="claimMap" class="view"><div class="section-heading compact-heading"><div><p class="eyebrow">Claim-Evidence Map</p><h3>Track claims, evidence, citation status, and risk.</h3></div><button id="addClaimBtn" class="primary" type="button">Add Claim</button></div><div class="table-wrap"><table><thead><tr><th>Claim</th><th>Evidence</th><th>Citation Status</th><th>Risk</th><th></th></tr></thead><tbody id="claimTableBody"></tbody></table></div></section>
-        <section id="review" class="view"><div class="two-column"><section class="panel"><div class="section-heading"><p class="eyebrow">Reviewer Lens</p><h3>Common risks</h3></div><div id="riskList" class="risk-list"></div></section><section class="panel"><div class="section-heading compact-heading"><div><p class="eyebrow">Run History</p><h3>Browser-session history</h3></div><button id="clearHistoryBtn" type="button">Clear</button></div><div id="historyList" class="history-list"></div></section></div></section>
-      </main>
-    </div>
-    <script src="app.js"></script>
-  </body>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <dialog id="projectDialog">
+    <form id="projectForm" method="dialog">
+      <div class="dialog-head"><div><span class="eyebrow">NEW RESEARCH PROJECT</span><h2>创建论文项目</h2></div><button type="button" class="icon" id="closeDialog">×</button></div>
+      <label>论文暂定标题<input name="title" required maxlength="300" placeholder="例如：Machine Learning for Financial Misconduct Detection"></label>
+      <label>研究主题与核心问题<textarea name="topic" rows="4" maxlength="5000" placeholder="研究背景、数据、方法和希望回答的问题"></textarea></label>
+      <div class="form-row"><label>论文类型<select name="paper_type"><option value="empirical">实证研究</option><option value="method">方法论文</option><option value="benchmark">基准研究</option><option value="review">综述</option><option value="clinical">临床研究</option><option value="thesis">学位论文章节</option></select></label><label>目标期刊/风格<input name="venue" maxlength="300" placeholder="可暂时留空"></label></div>
+      <label>额外要求<textarea name="instructions" rows="3" maxlength="10000" placeholder="术语、格式、不可改变的约束等"></textarea></label>
+      <div class="dialog-actions"><button type="button" class="button ghost" id="cancelDialog">取消</button><button type="submit" class="primary">创建项目</button></div>
+    </form>
+  </dialog>
+  <div id="toast" role="status"></div>
+  <script src="/app.js" defer></script>
+</body>
 </html>
