@@ -1,0 +1,24 @@
+services:
+  - type: web
+    name: paperai
+    runtime: docker
+    plan: starter
+    healthCheckPath: /api/health
+    autoDeployTrigger: checksPass
+    envVars:
+      - key: PAPERAI_HOST
+        value: 0.0.0.0
+      - key: PAPERAI_DATA_DIR
+        value: /app/data
+      - key: PAPERAI_DATABASE
+        value: /app/data/paperai.db
+      - key: PAPERAI_MODEL_BASE_URL
+        value: https://dashscope.aliyuncs.com/compatible-mode/v1
+      - key: PAPERAI_MODEL
+        value: qwen-plus
+      - key: PAPERAI_MODEL_API_KEY
+        sync: false
+    disk:
+      name: paperai-data
+      mountPath: /app/data
+      sizeGB: 1

@@ -1,72 +1,54 @@
 # Product Requirements
 
-## Product name
+## Product
 
-PaperAI: Scientific Paper Writing Agent System
+PaperAI is a standalone scientific writing agent for researchers who need a traceable path from source material to an English manuscript.
 
-## Goal
+## Primary users
 
-Help users draft, revise, and quality-check English scientific manuscripts with a structured multi-agent workflow.
+- Graduate students and researchers preparing papers or thesis chapters
+- Clinical, biomedical, computational, and data-science teams
+- Research groups that need a repeatable internal pre-submission review process
 
-## Target users
+## Core jobs
 
-- Graduate students writing thesis chapters or journal papers
-- Researchers preparing manuscripts
-- Clinical or biomedical research teams
-- Computational research teams
-- Product or data teams turning experiments into formal reports
+1. Preserve the relationship between manuscript claims and source evidence.
+2. Coordinate specialist writing and review tasks without losing terminology or decisions.
+3. Make missing evidence, citations, and method details visible instead of fabricating them.
+4. Keep intermediate outputs, human feedback, and revision history recoverable.
+5. Export portable manuscript drafts without locking users into the interface.
 
-## Core user problems
+## Version 2 capabilities
 
-1. Scientific papers require many linked sections and consistent terminology.
-2. Results, figures, methods, and claims often become disconnected during drafting.
-3. Citation and evidence gaps are hard to track manually.
-4. Drafts need reviewer-style critique before submission.
-5. Users need reusable prompts and workflows rather than one-off writing help.
+- Persistent projects, uploaded sources, runs, artifacts, and events
+- Extraction for common research document and tabular formats
+- Five resumable workflows and nine specialist agent roles
+- OpenAI-compatible model execution plus model-free prompt mode
+- Human checkpoints after outline and peer review
+- Crossref literature metadata discovery and DOI resolution
+- Local web workspace and REST/OpenAPI interface
+- Markdown, Word, and LaTeX export
+- Automated API and workflow tests
 
-## Core features
+## Explicit non-goals
 
-### Agent selection
-
-Users can select a specialist agent such as Orchestrator, Literature, Methods, Results, Discussion, Citation, or Reviewer.
-
-### Prompt package generation
-
-The system builds a structured prompt using the selected agent instruction, workflow files, templates, and user inputs.
-
-### Local frontend console
-
-Users can operate the agent system through a browser-based local interface.
-
-### Output download
-
-Generated or assembled content can be downloaded as a Markdown file.
-
-### Quality guardrails
-
-The system should identify missing evidence, missing citations, unsupported novelty claims, vague methods, and inconsistent terminology.
-
-## Non-goals for the initial version
-
-- It is not a reference manager.
-- It is not a full journal submission portal.
-- It does not guarantee acceptance by any venue.
-- It should not invent citations, datasets, experiments, or numeric results.
+- PaperAI does not guarantee journal acceptance.
+- Crossref metadata does not prove that a source supports a claim.
+- PaperAI is not a replacement for researcher judgment, statistical review, ethics review, or clinical governance.
+- The local edition is not a public multi-tenant SaaS and includes no authentication or billing.
 
 ## Success criteria
 
-- A new user can understand the project from the README.
-- A user can run the local frontend from the repository root.
-- Each agent has a clear role and expected output.
-- Generated prompts are structured enough to use in Cursor or another assistant workflow.
-- Manuscript quality checks explicitly flag missing evidence and citation risks.
+- A first-time user can create a project, upload evidence, run an outline workflow, inspect artifacts, and export the result.
+- Interrupted or approval-gated workflows resume without repeating completed stages.
+- Every stage receives the paper brief, available source text, and prior artifacts.
+- Missing support remains explicitly marked in downstream outputs.
+- Tests validate the central project, source, workflow, checkpoint, and export path.
 
-## Future features
+## Next production milestones
 
-- Project-level source inventory upload
-- Manuscript section versioning
-- Claim-evidence map editor
-- Citation ledger editor
-- Reviewer objection tracking
-- Export bundles for journal submission preparation
-- Automated tests for backend routes and prompt assembly
+- Durable external job queue and multi-instance deployment
+- Team accounts, roles, encryption, audit policy, and retention controls
+- Object storage and PostgreSQL repository implementations
+- Reference-library import/export and claim-level citation verification UI
+- Token budgeting, retrieval indexing, and per-project model cost reporting

@@ -1,27 +1,197 @@
-const defaultAgents=[{id:'orchestrator',name:'Orchestrator Agent',file:'agents/ORCHESTRATOR_AGENT.md',use:'Coordinate a full manuscript from materials to revision plan.'},{id:'literature',name:'Literature Agent',file:'agents/LITERATURE_AGENT.md',use:'Frame related work, research gaps, and citation needs.'},{id:'outline',name:'Outline Agent',file:'agents/OUTLINE_AGENT.md',use:'Create titles, abstract plans, contributions, and section structure.'},{id:'methods',name:'Methods Agent',file:'agents/METHODS_AGENT.md',use:'Write reproducible Methods from datasets, code, configs, and protocols.'},{id:'results',name:'Results Agent',file:'agents/RESULTS_AGENT.md',use:'Write Results from figures, tables, metrics, and statistical tests.'},{id:'figure_table',name:'Figure Table Agent',file:'agents/FIGURE_TABLE_AGENT.md',use:'Write standalone captions, table titles, and table notes.'},{id:'discussion',name:'Discussion Agent',file:'agents/DISCUSSION_AGENT.md',use:'Write Discussion, limitations, future work, and conclusion.'},{id:'citation',name:'Citation Agent',file:'agents/CITATION_AGENT.md',use:'Check citations, missing references, and novelty claim risk.'},{id:'reviewer',name:'Reviewer Agent',file:'agents/REVIEWER_AGENT.md',use:'Review a manuscript like a critical peer reviewer.'}];
-const workflowSteps=[['Intake','Collect title, venue, paper type, materials, figures, and tables.'],['Inventory','Map each source file to a section, figure, claim, or citation need.'],['Claim Map','Link major claims to evidence or mark missing support.'],['Outline','Plan title, abstract, contributions, sections, and figure placement.'],['Draft','Generate section-ready scientific prose from concrete materials.'],['Review','Run reviewer and citation checks before revision.']];
-const risks=[['Unsupported novelty claim','High','Tie novelty to prior work and verified citations.'],['Missing method detail','High','Methods need enough detail for reproducibility.'],['Result overclaiming','Medium','Separate observation from interpretation.'],['Weak figure caption','Medium','Captions should be standalone.'],['Citation uncertainty','High','Unverified references should be marked, never invented.']];
-const state={agents:[...defaultAgents],selectedAgent:defaultAgents[0],history:JSON.parse(localStorage.getItem('paperaiHistory')||'[]'),claims:JSON.parse(localStorage.getItem('paperaiClaims')||'[]'),lastDownload:null};
-const $=s=>document.querySelector(s);const $$=s=>Array.from(document.querySelectorAll(s));
-const el={backendStatus:$('#backendStatus'),pageTitle:$('#pageTitle'),agentGrid:$('#agentGrid'),workflowSteps:$('#workflowSteps'),agentCount:$('#agentCount'),selectedAgentMetric:$('#selectedAgentMetric'),runCount:$('#runCount'),claimCount:$('#claimCount'),inspectorAgent:$('#inspectorAgent'),inspectorUse:$('#inspectorUse'),promptOutput:$('#promptOutput'),runMeta:$('#runMeta'),claimTableBody:$('#claimTableBody'),riskList:$('#riskList'),historyList:$('#historyList')};
-function esc(v){return String(v).replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;'}[c]||c));}
-function val(id){const n=document.getElementById(id);return n?n.value.trim():'';}
-function setView(id){$$('.view').forEach(v=>v.classList.toggle('active-view',v.id===id));$$('.nav-item').forEach(b=>b.classList.toggle('active',b.dataset.section===id));const b=$(`.nav-item[data-section="${id}"]`);if(b)el.pageTitle.textContent=b.textContent;}
-function metrics(){el.agentCount.textContent=state.agents.length;el.selectedAgentMetric.textContent=state.selectedAgent.name.replace(' Agent','');el.runCount.textContent=state.history.length;el.claimCount.textContent=state.claims.length;el.inspectorAgent.textContent=state.selectedAgent.name;el.inspectorUse.textContent=state.selectedAgent.use;}
-function renderAgents(){el.agentGrid.innerHTML='';state.agents.forEach(a=>{const card=document.createElement('button');card.type='button';card.className=`agent-card ${a.id===state.selectedAgent.id?'active':''}`;card.innerHTML=`<span class="agent-tag">${esc(a.id)}</span><strong>${esc(a.name)}</strong><p>${esc(a.use)}</p><small>${esc(a.file||'backend agent')}</small>`;card.onclick=()=>{state.selectedAgent=a;renderAgents();metrics();generatePrompt();setView('workspace');};el.agentGrid.appendChild(card);});}
-function renderWorkflow(){el.workflowSteps.innerHTML=workflowSteps.map(([t,d],i)=>`<div class="timeline-item"><b>${i+1}. ${t}</b><span>${d}</span></div>`).join('');}
-function renderRisks(){el.riskList.innerHTML=risks.map(([t,l,n])=>`<article class="risk-card"><div><strong>${t}</strong><span>${n}</span></div><em class="risk-${l.toLowerCase()}">${l}</em></article>`).join('');}
-function saveClaims(){localStorage.setItem('paperaiClaims',JSON.stringify(state.claims));metrics();}
-function renderClaims(){if(!state.claims.length){state.claims=[{claim:'Main contribution is clearly supported',evidence:'Add figure/table or experiment reference',citation:'Needs review',risk:'Medium'},{claim:'Method is reproducible',evidence:'Add dataset, code, protocol, or config path',citation:'Not required',risk:'High'}];}el.claimTableBody.innerHTML='';state.claims.forEach((r,i)=>{const tr=document.createElement('tr');tr.innerHTML=`<td><input data-claim-field="claim" data-index="${i}" value="${esc(r.claim)}"></td><td><input data-claim-field="evidence" data-index="${i}" value="${esc(r.evidence)}"></td><td><select data-claim-field="citation" data-index="${i}">${['Verified','Needs review','Missing','Not required'].map(x=>`<option ${r.citation===x?'selected':''}>${x}</option>`).join('')}</select></td><td><select data-claim-field="risk" data-index="${i}">${['Low','Medium','High'].map(x=>`<option ${r.risk===x?'selected':''}>${x}</option>`).join('')}</select></td><td><button class="danger" data-delete-claim="${i}" type="button">Remove</button></td>`;el.claimTableBody.appendChild(tr);});saveClaims();}
-function renderHistory(){if(!state.history.length){el.historyList.innerHTML='<p class="muted">No runs yet. Generate a prompt or run the backend to create history.</p>';return;}el.historyList.innerHTML=state.history.slice().reverse().map(h=>`<article class="history-card"><strong>${esc(h.title)}</strong><span>${esc(h.agent)} · ${esc(h.mode)} · ${esc(h.time)}</span><button data-load-history="${h.id}" type="button">Load</button></article>`).join('');}
-function payload(){return{agentId:state.selectedAgent.id,projectPath:val('projectPath')||'[PROJECT_PATH]',title:val('title')||'[PAPER_TITLE]',topic:val('topic')||'[PAPER_TOPIC]',venue:val('venue')||'[TARGET_VENUE_OR_STYLE]',paperType:val('paperType')||'[PAPER_TYPE]',desiredOutput:val('desiredOutput')||'Full manuscript draft',model:val('model')||'qwen3.6-max-preview',task:val('task')||'[DESCRIBE_THE_WRITING_TASK]',materials:val('materials')||'[LIST_FILES_FIGURES_TABLES_NOTES_TO_READ]'};}
-function claimSummary(){return state.claims.map((r,i)=>`${i+1}. Claim: ${r.claim}\n   Evidence: ${r.evidence}\n   Citation: ${r.citation}\n   Risk: ${r.risk}`).join('\n');}
-function generatePrompt(track=false){const a=state.selectedAgent,p=payload();const prompt=`Read ${a.file||'the selected agent instruction file'}.\nAlso read workflows/PAPER_WORKFLOW.md and templates/CLAIM_EVIDENCE_MAP.md.\n\nOperate as the ${a.name}.\n\nProject or manuscript path:\n${p.projectPath}\n\nPaper title:\n${p.title}\n\nPaper topic:\n${p.topic}\n\nPaper type:\n${p.paperType}\n\nTarget venue or writing style:\n${p.venue}\n\nDesired output:\n${p.desiredOutput}\n\nTask:\n${p.task}\n\nMaterials, figures, tables, notes, or files to inspect:\n${p.materials}\n\nCurrent claim-evidence map:\n${claimSummary()||'No claim map rows yet.'}\n\nOutput requirements:\n1. Write in English unless instructed otherwise.\n2. Do not invent citations, methods, data, metrics, or statistical tests.\n3. Mark missing support as [EVIDENCE NEEDED], [CITATION NEEDED], or [METHOD DETAIL NEEDED].\n4. Keep claims linked to specific evidence.\n5. Generate manuscript-ready content for the requested title/topic.\n6. Provide a concise revision checklist after the draft output.\n`;el.promptOutput.value=prompt;state.lastDownload={filename:'paperai-prompt.md',content:prompt};if(track)addHistory('Prompt',prompt);return prompt;}
-function addHistory(mode,content){const p=payload();state.history.push({id:String(Date.now()+Math.random()),title:p.title==='[PAPER_TITLE]'?p.desiredOutput:p.title,agent:state.selectedAgent.name,mode,time:new Date().toLocaleString(),content});state.history=state.history.slice(-20);localStorage.setItem('paperaiHistory',JSON.stringify(state.history));renderHistory();metrics();}
-async function checkBackendHealth(){try{const r=await fetch('/api/health');if(!r.ok)throw new Error(r.status);const d=await r.json();el.backendStatus.textContent=d.qwenConfigured?'Connected · model ready':'Connected · prompt mode';}catch(e){el.backendStatus.textContent='Offline · local prompt mode';}}
-async function loadBackendAgents(){try{const r=await fetch('/api/agents');if(!r.ok)throw new Error(r.status);const d=await r.json();if(d.ok&&Array.isArray(d.agents)&&d.agents.length){state.agents=d.agents;state.selectedAgent=state.agents[0];renderAgents();metrics();generatePrompt();}}catch(e){}}
-async function runBackendRequest(executeModel){const rb=$('#runBackendBtn'),rm=$('#runModelBtn');rb.disabled=true;rm.disabled=true;el.runMeta.className='run-meta';el.runMeta.textContent=executeModel?'Calling backend model route...':'Calling backend prompt route...';try{const p=payload();p.executeModel=executeModel;p.saveToServer=false;const r=await fetch('/api/run-agent',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(p)});const d=await r.json();if(!r.ok||!d.ok)throw new Error(d.error||`Backend returned ${r.status}`);let out=d.prompt;if(d.modelOutput)out=`# Model Output (${d.model})\n\n${d.modelOutput}\n\n---\n\n# Prompt\n\n${d.prompt}`;el.promptOutput.value=out;state.lastDownload={filename:d.downloadFilename||'paperai-output.md',content:d.downloadContent||out};el.runMeta.className='run-meta ok';el.runMeta.textContent=d.savedPath?`Saved run ${d.runId}: ${d.savedPath}`:`Generated run ${d.runId}.`;addHistory(executeModel?'Model':'Backend',out);setView('workspace');}catch(e){el.runMeta.className='run-meta error';el.runMeta.textContent=`Run failed: ${e.message}`;setView('workspace');}finally{rb.disabled=false;rm.disabled=false;}}
-function downloadFile(filename,content){const blob=new Blob([content],{type:'text/markdown;charset=utf-8'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=filename;document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);}
-function bind(){ $$('.nav-item').forEach(b=>b.onclick=()=>setView(b.dataset.section)); $$('[data-jump]').forEach(b=>b.onclick=()=>setView(b.dataset.jump)); $('#generateBtn').onclick=()=>{generatePrompt(true);setView('workspace');}; $('#runBackendBtn').onclick=()=>runBackendRequest(false); $('#runModelBtn').onclick=()=>runBackendRequest(true); $('#copyBtn').onclick=async()=>navigator.clipboard.writeText(el.promptOutput.value); $('#downloadBtn').onclick=()=>downloadFile(state.lastDownload?.filename||'paperai-output.md',state.lastDownload?.content||el.promptOutput.value); $('#resetBtn').onclick=()=>{document.getElementById('taskForm').reset();generatePrompt();}; $('#addClaimBtn').onclick=()=>{state.claims.push({claim:'New claim',evidence:'Evidence source',citation:'Needs review',risk:'Medium'});renderClaims();}; $('#clearHistoryBtn').onclick=()=>{state.history=[];localStorage.removeItem('paperaiHistory');renderHistory();metrics();}; document.addEventListener('input',e=>{if(e.target.matches('input, textarea, select')&&e.target.id!=='promptOutput')generatePrompt();const f=e.target.dataset.claimField,i=Number(e.target.dataset.index);if(f&&Number.isInteger(i)&&state.claims[i]){state.claims[i][f]=e.target.value;saveClaims();generatePrompt();}}); document.addEventListener('click',e=>{const del=e.target.dataset.deleteClaim;if(del!==undefined){state.claims.splice(Number(del),1);renderClaims();generatePrompt();}const hid=e.target.dataset.loadHistory;if(hid){const item=state.history.find(x=>x.id===hid);if(item){el.promptOutput.value=item.content;state.lastDownload={filename:'paperai-history.md',content:item.content};setView('workspace');}}});}
-function init(){bind();renderWorkflow();renderRisks();renderClaims();renderHistory();renderAgents();metrics();generatePrompt();checkBackendHealth();loadBackendAgents();}
-init();
+const $ = (selector) => document.querySelector(selector);
+const state = { projects: [], project: null, run: null, poll: null };
+
+async function api(path, options = {}) {
+  const response = await fetch(path, options);
+  if (!response.ok) {
+    let message = `请求失败 (${response.status})`;
+    try { message = (await response.json()).detail || message; } catch (_) {}
+    throw new Error(message);
+  }
+  if (response.status === 204) return null;
+  return response.json();
+}
+
+function toast(message, error = false) {
+  const node = $('#toast');
+  node.textContent = message;
+  node.className = error ? 'show error' : 'show';
+  clearTimeout(node.timer);
+  node.timer = setTimeout(() => node.className = '', 3200);
+}
+
+function formatBytes(value) {
+  if (value < 1024) return `${value} B`;
+  if (value < 1024 ** 2) return `${(value / 1024).toFixed(1)} KB`;
+  return `${(value / 1024 ** 2).toFixed(1)} MB`;
+}
+
+function statusLabel(status) {
+  return ({queued:'排队中',running:'运行中',waiting_approval:'等待确认',completed:'已完成',failed:'失败',cancelled:'已终止'})[status] || status;
+}
+
+async function boot() {
+  bind();
+  try {
+    const health = await api('/api/health');
+    $('#healthDot').className = 'online';
+    $('#healthText').textContent = `PaperAI ${health.version}`;
+    $('#modelText').textContent = health.modelConfigured ? `模型：${health.model}` : '模型未配置 · 可用 Prompt 模式';
+    if (!health.modelConfigured) $('#modeSelect').value = 'prompt';
+  } catch (error) {
+    $('#healthDot').className = 'offline';
+    $('#healthText').textContent = '服务未连接';
+    $('#modelText').textContent = error.message;
+  }
+  await loadProjects();
+}
+
+function bind() {
+  $('#newProjectBtn').onclick = $('#heroNewBtn').onclick = () => $('#projectDialog').showModal();
+  $('#closeDialog').onclick = $('#cancelDialog').onclick = () => $('#projectDialog').close();
+  $('#projectForm').onsubmit = createProject;
+  $('#fileInput').onchange = uploadFiles;
+  $('#runBtn').onclick = createRun;
+  $('#runSelect').onchange = (event) => selectRun(event.target.value);
+  $('#artifactSelect').onchange = renderArtifact;
+  $('#approveBtn').onclick = () => resumeRun(true);
+  $('#rejectBtn').onclick = () => resumeRun(false);
+}
+
+async function loadProjects(selectId) {
+  state.projects = await api('/api/projects');
+  const list = $('#projectList');
+  list.innerHTML = state.projects.length ? state.projects.map(project => `<button data-id="${project.id}" class="${state.project?.id === project.id ? 'active' : ''}"><span>${escapeHtml(project.title)}</span><small>${project.document_count} 材料 · ${project.run_count} 运行</small></button>`).join('') : '<p class="side-empty">暂无项目</p>';
+  list.querySelectorAll('button').forEach(button => button.onclick = () => selectProject(button.dataset.id));
+  if (selectId) await selectProject(selectId);
+}
+
+async function createProject(event) {
+  event.preventDefault();
+  const form = new FormData(event.target);
+  const payload = Object.fromEntries(form.entries());
+  try {
+    const project = await api('/api/projects', {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+    $('#projectDialog').close();
+    event.target.reset();
+    await loadProjects(project.id);
+    toast('论文项目已创建');
+  } catch (error) { toast(error.message, true); }
+}
+
+async function selectProject(projectId) {
+  clearInterval(state.poll);
+  state.project = await api(`/api/projects/${projectId}`);
+  state.run = null;
+  $('#emptyView').hidden = true;
+  $('#workspaceView').hidden = false;
+  $('#pageTitle').textContent = state.project.title;
+  $('#documentCount').textContent = state.project.documents.length;
+  $('#runCount').textContent = state.project.runs.length;
+  renderDocuments();
+  renderRunSelect();
+  $('#exportActions').hidden = true;
+  await loadProjects();
+  if (state.project.runs.length) await selectRun(state.project.runs[0].id);
+}
+
+function renderDocuments() {
+  const node = $('#documentList');
+  node.innerHTML = state.project.documents.length ? state.project.documents.map(doc => `<div class="document"><div class="file-icon">${doc.filename.split('.').pop().slice(0,4).toUpperCase()}</div><div><strong>${escapeHtml(doc.filename)}</strong><small>${formatBytes(doc.size)} · ${doc.extraction_status === 'ready' ? '文本已提取' : escapeHtml(doc.extraction_status)}</small></div><button class="icon delete-doc" data-id="${doc.id}" title="删除">×</button></div>`).join('') : '<div class="drop-empty">拖入或上传研究材料，Agent 才能基于证据写作。</div>';
+  node.querySelectorAll('.delete-doc').forEach(button => button.onclick = () => deleteDocument(button.dataset.id));
+}
+
+async function uploadFiles(event) {
+  const files = [...event.target.files];
+  for (const file of files) {
+    const form = new FormData(); form.append('file', file);
+    try { await api(`/api/projects/${state.project.id}/documents`, {method:'POST', body:form}); toast(`${file.name} 已完成解析`); }
+    catch (error) { toast(`${file.name}: ${error.message}`, true); }
+  }
+  event.target.value = '';
+  await selectProject(state.project.id);
+}
+
+async function deleteDocument(documentId) {
+  if (!confirm('删除这份研究材料？')) return;
+  try { await api(`/api/projects/${state.project.id}/documents/${documentId}`, {method:'DELETE'}); await selectProject(state.project.id); }
+  catch (error) { toast(error.message, true); }
+}
+
+function renderRunSelect() {
+  $('#runSelect').innerHTML = state.project.runs.length ? state.project.runs.map(run => `<option value="${run.id}">${run.workflow} · ${statusLabel(run.status)}</option>`).join('') : '<option value="">暂无运行</option>';
+}
+
+async function createRun() {
+  const payload = {workflow:$('#workflowSelect').value, execution_mode:$('#modeSelect').value, human_review:$('#reviewCheck').checked};
+  $('#runBtn').disabled = true;
+  $('#runHint').textContent = '正在创建运行…';
+  try {
+    const run = await api(`/api/projects/${state.project.id}/runs`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify(payload)});
+    state.project = await api(`/api/projects/${state.project.id}`);
+    renderRunSelect();
+    await selectRun(run.id);
+    toast('多 Agent 工作流已启动');
+  } catch (error) { toast(error.message, true); $('#runHint').textContent = error.message; }
+  finally { $('#runBtn').disabled = false; }
+}
+
+async function selectRun(runId) {
+  if (!runId) return;
+  clearInterval(state.poll);
+  $('#runSelect').value = runId;
+  await refreshRun(runId);
+  if (!['completed','failed','cancelled'].includes(state.run.status)) state.poll = setInterval(() => refreshRun(runId), 1800);
+}
+
+async function refreshRun(runId) {
+  try {
+    state.run = await api(`/api/runs/${runId}`);
+    renderRun();
+    if (['completed','failed','cancelled'].includes(state.run.status)) clearInterval(state.poll);
+  } catch (error) { clearInterval(state.poll); toast(error.message, true); }
+}
+
+function renderRun() {
+  $('#runEmpty').hidden = true; $('#runDetail').hidden = false;
+  $('#statusBadge').textContent = statusLabel(state.run.status);
+  $('#statusBadge').className = `status ${state.run.status}`;
+  $('#currentStep').textContent = state.run.current_step ? state.run.current_step.replaceAll('_',' ') : statusLabel(state.run.status);
+  $('#progressText').textContent = `${state.run.progress}%`;
+  $('#progressBar').style.width = `${state.run.progress}%`;
+  $('#progressCount').textContent = `${state.run.progress}%`;
+  $('#progressLabel').textContent = statusLabel(state.run.status);
+  $('#approvalBox').hidden = state.run.status !== 'waiting_approval';
+  $('#runHint').textContent = state.run.error || '';
+  $('#exportActions').hidden = !state.run.artifacts.length;
+  $('#exportMd').href = `/api/runs/${state.run.id}/export?format=md`;
+  $('#exportDocx').href = `/api/runs/${state.run.id}/export?format=docx`;
+  $('#exportTex').href = `/api/runs/${state.run.id}/export?format=tex`;
+  $('#timeline').innerHTML = state.run.artifacts.map((artifact, index) => `<button data-step="${artifact.step}" class="timeline-item"><span>${String(index + 1).padStart(2,'0')}</span><div><strong>${artifact.step.replaceAll('_',' ')}</strong><small>${artifact.agent_id} agent · 已完成</small></div><i>✓</i></button>`).join('') || '<p class="muted">Agent 正在准备第一个阶段…</p>';
+  $('#timeline').querySelectorAll('button').forEach(button => button.onclick = () => { $('#artifactSelect').value = button.dataset.step; renderArtifact(); });
+  const selected = $('#artifactSelect').value;
+  $('#artifactSelect').innerHTML = '<option value="">选择产物</option>' + state.run.artifacts.map(a => `<option value="${a.step}">${a.step.replaceAll('_',' ')} · ${a.agent_id}</option>`).join('');
+  if (state.run.artifacts.some(item => item.step === selected)) $('#artifactSelect').value = selected;
+  else if (state.run.artifacts.length) $('#artifactSelect').value = state.run.artifacts.at(-1).step;
+  renderArtifact();
+}
+
+function renderArtifact() {
+  const artifact = state.run?.artifacts.find(item => item.step === $('#artifactSelect').value);
+  $('#artifactContent').textContent = artifact?.content || '这里将显示每个 Agent 生成的 Markdown 内容。';
+}
+
+async function resumeRun(approved) {
+  try {
+    await api(`/api/runs/${state.run.id}/resume`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({approved, feedback:$('#feedbackInput').value})});
+    $('#feedbackInput').value = '';
+    toast(approved ? '已批准，Agent 继续工作' : '运行已终止');
+    await selectRun(state.run.id);
+  } catch (error) { toast(error.message, true); }
+}
+
+function escapeHtml(value) {
+  const node = document.createElement('div'); node.textContent = value; return node.innerHTML;
+}
+
+boot();

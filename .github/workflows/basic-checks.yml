@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  python-syntax:
+  test:
     runs-on: ubuntu-latest
 
     steps:
@@ -17,10 +17,16 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
 
-      - name: Check Python syntax
-        run: python -m py_compile backend/server.py
+      - name: Install dependencies
+        run: pip install -r requirements-dev.txt
+
+      - name: Run tests
+        run: python -m pytest -q
+
+      - name: Lint
+        run: ruff check backend tests
 
       - name: Verify required docs exist
         run: |

@@ -1,96 +1,45 @@
 # System Overview
 
-This project defines a modular agent system for English scientific paper writing. The system is organized around one orchestrator agent and eight specialist agents.
+PaperAI 2.0 is a standalone scientific writing service with five layers.
 
-## Agent Architecture
+## Architecture
 
 ```text
-Research materials
-  |
-  v
-ORCHESTRATOR_AGENT
-  |
-  +--> LITERATURE_AGENT
-  +--> OUTLINE_AGENT
-  +--> METHODS_AGENT
-  +--> RESULTS_AGENT
-  +--> FIGURE_TABLE_AGENT
-  +--> DISCUSSION_AGENT
-  +--> CITATION_AGENT
-  +--> REVIEWER_AGENT
-  |
-  v
-Manuscript draft + revision plan + quality report
+Browser workspace / API client
+              ↓
+        FastAPI service
+              ↓
+Project repository ── Material extractors ── Crossref client
+              ↓
+       Workflow engine
+              ↓
+OpenAI-compatible model provider
+              ↓
+ SQLite state + source files + exports
 ```
 
-## Agent Responsibilities
+## Persistent objects
 
-### ORCHESTRATOR_AGENT
+- **Project**: paper brief, venue, type, output language, and immutable constraints.
+- **Document**: original source path, checksum, media type, extraction status, and extracted text.
+- **Run**: workflow, execution mode, model, state, progress, and checkpoint policy.
+- **Artifact**: the complete Markdown output from one agent step.
+- **Event**: timestamped workflow lifecycle information for monitoring and debugging.
 
-Owns the full paper story and coordinates all other agents. It builds the manuscript plan, assigns tasks, merges outputs, detects inconsistencies, and maintains the claim-evidence map.
+## Workflow state machine
 
-### LITERATURE_AGENT
+Runs move through `queued`, `running`, `waiting_approval`, `completed`, `failed`, or `cancelled`. Each completed artifact is stored before the next task starts, so a process can resume without regenerating prior work.
 
-Builds the related-work structure, identifies research gaps, checks whether novelty claims are justified, and marks missing citations.
+The full workflow contains intake, claim–evidence mapping, outline, literature, methods, results, figures and tables, discussion, citation audit, peer review, and final integration. Optional approval gates follow outline and peer review.
 
-### OUTLINE_AGENT
+## Safety rules
 
-Creates the paper title, abstract plan, section structure, contribution list, and paragraph-level outline.
+- Never manufacture citations, methods, datasets, sample sizes, metrics, tests, or results.
+- Keep source excerpts and prior artifacts visible to each downstream agent.
+- Use explicit gap markers instead of silently filling missing information.
+- Treat Crossref results as bibliographic metadata, not proof that a paper supports a claim.
+- Keep human feedback as a first-class artifact visible to subsequent agents.
 
-### METHODS_AGENT
+## Deployment boundary
 
-Writes reproducible methods from code, experiment notes, configs, datasets, and protocols.
-
-### RESULTS_AGENT
-
-Turns tables, metrics, statistical tests, and figures into accurate results prose without overclaiming.
-
-### FIGURE_TABLE_AGENT
-
-Writes standalone figure captions, table titles, table notes, and visual result summaries.
-
-### DISCUSSION_AGENT
-
-Interprets results, compares them with prior work, writes limitations, and frames future work.
-
-### CITATION_AGENT
-
-Checks citation integrity. It should never invent references. Unverified citations must be marked as `[CITATION NEEDED]`.
-
-### REVIEWER_AGENT
-
-Reviews the manuscript like a critical peer reviewer. It identifies unsupported claims, missing experiments, unclear methods, weak figures, and likely reviewer objections.
-
-## Data Objects
-
-The system uses these shared objects:
-
-- `paper_brief`: title idea, field, target venue, study type, intended contribution.
-- `source_inventory`: code files, data files, tables, figures, notes, existing drafts.
-- `claim_evidence_map`: each claim linked to evidence.
-- `manuscript_outline`: section and paragraph plan.
-- `draft_sections`: generated manuscript sections.
-- `citation_ledger`: verified, missing, and uncertain citations.
-- `review_report`: reviewer-style critique and revision tasks.
-
-## Operating Rules
-
-- Draft from evidence, not from enthusiasm.
-- Separate observation, interpretation, and speculation.
-- Prefer cautious scientific wording.
-- Do not fabricate methods, numbers, citations, datasets, or statistical tests.
-- Mark missing information explicitly.
-- Keep section outputs compatible with a full manuscript.
-- Preserve consistent terminology across title, abstract, figures, tables, and conclusion.
-
-## Standard Workflow
-
-1. Inventory project materials.
-2. Define the central contribution.
-3. Build the claim-evidence map.
-4. Create the manuscript outline.
-5. Draft Methods and Results from concrete evidence.
-6. Draft Introduction, Related Work, Discussion, and Conclusion.
-7. Write captions and table notes.
-8. Run citation and reviewer checks.
-9. Revise until claims, evidence, and wording align.
+The default service binds to localhost and has no authentication. This is appropriate for personal local use. Public or team deployment requires an identity layer, access controls, encrypted secrets, TLS, backups, request limits, and an approved data-retention policy.

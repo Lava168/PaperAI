@@ -1,53 +1,52 @@
 # Development Guide
 
-This guide explains how to run and extend the Scientific Paper Writing Agent System locally.
-
 ## Requirements
 
-- Python 3.10 or later
+- Python 3.10+
+- SQLite 3
 - A modern browser
-- No required Python package installation for the current local server
 
-## Run locally
-
-From the repository root:
+## Local environment
 
 ```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements-dev.txt
 python backend/server.py
 ```
 
-Open the frontend:
+The application, REST API, and OpenAPI documentation are served from the same process at `/`, `/api`, and `/docs`.
 
-```text
-http://127.0.0.1:8080/
+## Backend modules
+
+| Module | Responsibility |
+| --- | --- |
+| `api.py` | HTTP routes, uploads, exports, static frontend |
+| `config.py` | Environment-derived immutable settings |
+| `db.py` | SQLite schema and transaction boundary |
+| `repository.py` | Project, document, run, artifact, and event persistence |
+| `materials.py` | Safe filenames and research-file text extraction |
+| `provider.py` | OpenAI-compatible model calls |
+| `workflow.py` | Background execution, checkpoints, resume, prompt context |
+| `catalog.py` | Agent registry and workflow definitions |
+| `literature.py` | Crossref search and DOI lookup |
+| `exporter.py` | Markdown, Word, and LaTeX output |
+
+## Adding a workflow
+
+Add the workflow sequence to `WORKFLOWS` in `catalog.py`. Each tuple contains a step identifier and an agent identifier. Add a task description to `STEP_TASKS`; the engine will persist, resume, monitor, and expose the new workflow automatically.
+
+## Testing
+
+Tests use a temporary database and a deterministic fake model provider:
+
+```bash
+pytest -q
+ruff check backend tests
 ```
 
-## Main backend files
+Model-backed integration tests should use a separate opt-in marker and must never require a real API key in CI.
 
-- `backend/server.py`: local HTTP server and API routes
-- `agents/*.md`: agent instructions
-- `workflows/PAPER_WORKFLOW.md`: end-to-end writing workflow
-- `templates/*.md`: reusable manuscript templates
-- `checklists/*.md`: final quality checks
+## Production notes
 
-## Main frontend files
-
-- `frontend/index.html`: page structure
-- `frontend/styles.css`: visual styling
-- `frontend/app.js`: browser logic and API calls
-
-## Development workflow
-
-1. Update or add agent instructions in `agents/`.
-2. Update shared workflow rules in `workflows/`.
-3. Add reusable output formats in `templates/`.
-4. Test through the local frontend.
-5. Review generated output for evidence linkage and unsupported claims.
-
-## Quality principles
-
-- Do not fabricate citations, methods, datasets, metrics, or statistical tests.
-- Mark missing evidence clearly.
-- Keep scientific writing cautious and traceable.
-- Separate observed results from interpretation.
-- Preserve consistent terminology across all sections.
+The included thread executor is intended for one local service process. For multi-instance production deployment, replace it with a durable queue such as Celery, Dramatiq, or a managed job system, and use PostgreSQL/object storage behind the same repository interface.
