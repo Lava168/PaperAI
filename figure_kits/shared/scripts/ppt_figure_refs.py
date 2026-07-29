@@ -1,0 +1,86 @@
+"""Short author-journal citations under figures (Wu lab-meeting style)."""
+
+from __future__ import annotations
+
+from pathlib import Path
+
+REF_BY_FILE: dict[str, str] = {
+    "slide2_technology_timeline.png": "Wen J et al, Nat Mach Intell. 2024",
+    "bg_global_AD_incidence_projection.png": "Nichols E et al, Lancet Neurol. 2022",
+    "bg_AD_global_epidemic.jpg": "Alzheimer's Association, ALZ Facts. 2024",
+    "slide2_AD_burden_infographic.png": "Jia L et al, Gen Psychiatr. 2022",
+    "bg_China_aging_population_trend.png": "National Bureau of Statistics, China. 2023",
+    "bg_China_aging_report.png": "CAEG, China Aging Report. 2023",
+    "bg_China_aging_RAND.png": "RAND Corporation, China Aging. 2022",
+    "slide2_China_AD_report_2024.png": "China AD Report Working Group. 2024",
+    "slide2_AD_cost_projection.jpg": "Gustavsson A et al, Lancet Public Health. 2023",
+    "bg_AD_pathology_plaques_tangles.png": "Berron D et al, Ann Neurol. 2022",
+    "bg_amyloid_cascade_hypothesis.jpg": "Hardy J et al, Science. 1992",
+    "bg_amyloid_tau_synergy.png": "Frisoni GB et al, Lancet. 2025",
+    "bg_tau_spreading_brain.png": "Mohanty S et al, Acta Neuropathol. 2025",
+    "bg_AD_challenges_mechanisms.webp": "Guo T et al, Nat Hum Behav. 2024",
+    "bg_Braak_staging_tau_PET.jpg": "Braak H et al, Neurobiol Aging. 1991",
+    "bg_AD_progression_stages.jpeg": "Jack CR Jr et al, Alz Dement. 2018",
+    "bg_tau_staging_longitudinal.png": "Ossenkoppele R et al, JAMA Neurol. 2022",
+    "bg_healthy_vs_AD_brain_MRI.jpg": "Frisoni GB et al, Lancet. 2025",
+    "bg_brain_shape_atrophy_aging_AD.webp": "Jack CR Jr et al, Lancet Neurol. 2013",
+    "bg_neuroimaging_AD_advances.png": "Andrieu S et al, Nat Med. 2025",
+    "slide9_brain_atrophy_AD.png": "Frisoni GB et al, Lancet. 2025",
+    "slide9_AD_subtypes_atrophy.webp": "Nelson PT et al, Brain. 2019",
+    "bg_PET_MRI_AD_multimodal.webp": "Frisoni GB et al, Lancet. 2025",
+    "bg_PET_MRI_dementia.gif": "Johnson KA et al, N Engl J Med. 2012",
+    "bg_FLAIR_WMH_classification.jpg": "Wardlaw JM et al, Lancet Neurol. 2013",
+    "slide2_MaM_DiT_overview.jpg": "MaM-DiT Consortium, Innovation Informatics. 2026",
+    "slide2_FreeSurfer_atlas.png": "Fischl B, NeuroImage. 2012",
+    "slide2_Desikan_Killiany_atlas.png": "Desikan RS et al, NeuroImage. 2006",
+    "slide2_ATN_framework.png": "Jack CR Jr et al, Alz Dement. 2018",
+    "slide2_NIA_AA_biological_definition.webp": "NIA-AA Workgroup, Alz Dement. 2024",
+    "slide2_DMN_network.jpeg": "Greicius MD et al, PNAS. 2004",
+    "slide2_MTL_network_AD.jpg": "Berron D et al, Ann Neurol. 2022",
+    "bg_WMH_cognitive_impairment.jpg": "Wardlaw JM et al, Lancet Neurol. 2013",
+    "bg_cerebrovascular_disease_AD.jpg": "Schneider JA et al, Lancet Neurol. 2007",
+    "bg_WMH_progression_AD.jpg": "Wardlaw JM et al, Lancet Neurol. 2019",
+    "bg_DL_pipeline_AD_detection.jpg": "Wen J et al, Nat Mach Intell. 2024",
+    "bg_XAI_brain_connectivity.webp": "Wen J et al, Nat Mach Intell. 2024",
+    "bg_explainable_AI_AD_SECNN.webp": "Wen J et al, Nat Mach Intell. 2024",
+    "slide3_FDA_AI_timeline.jpg": "U.S. FDA, AI/ML Action Plan. 2025",
+    "slide3_EMA_FDA_2026.jpg": "U.S. FDA & EMA, Good AI Practice. 2026",
+    "slide3_FDA_7step_framework.jpg": "U.S. FDA, AI Decision Framework. 2025",
+    "bg_ADNI_history_timeline.png": "Petersen RC et al, Alz Dement. 2010",
+    "bg_ADNI4_design.png": "ADNI Consortium, Alz Dement. 2023",
+    "bg_AD_subtypes_longitudinal.jpg": "Nelson PT et al, Brain. 2019",
+    "slide3_gap_solution_mapping.png": "Zhao Y et al, Dissertation figure. 2026",
+    "slide7_research_positioning.png": "Zhao Y et al, Dissertation figure. 2026",
+    "slide4_four_dimension_framework.png": "Zhao Y et al, Dissertation figure. 2026",
+    "slide8_clinical_vision.png": "Zhao Y et al, Dissertation figure. 2026",
+    "slide9_ARANet_architecture.png": "Zhao Y et al, ARA-Net manuscript. 2026",
+    "brain_surface_6view.png": "Zhao Y et al, ARA-Net manuscript. 2026",
+    "true3d_021_S_4718_gradcam_roi_overlay.png": "Zhao Y et al, PathwayPro manuscript. 2026",
+    "trajectory_brain_first.png": "Zhao Y et al, A2C-NODE manuscript. 2026",
+    "case_02_123_S_0072_annotated.png": "Zhao Y et al, CUED-AD manuscript. 2026",
+    "fig2_real_brain_panels_abc.png": "Zhao Y et al, ARA-Net manuscript. 2026",
+    "fig5g_brain_profile.png": "Zhao Y et al, ARA-Net manuscript. 2026",
+    "multicase_gradcam_gallery_12_risk_columns_rendered_ppro.png": "Zhao Y et al, PathwayPro manuscript. 2026",
+    "ate_glass_brain.png": "Zhao Y et al, A2C-NODE manuscript. 2026",
+    "cued_ad_conflict_uncertainty.png": "Zhao Y et al, CUED-AD manuscript. 2026",
+    "fig4e_ad_vs_cn_roc.png": "Zhao Y et al, ARA-Net manuscript. 2026",
+    "fig4_phase0_benchmark.png": "Zhao Y et al, PathwayPro manuscript. 2026",
+    "Fig2_internal_results.png": "Zhao Y et al, A2C-NODE manuscript. 2026",
+    "real_fig10_comprehensive_dashboard.png": "Zhao Y et al, CUED-AD manuscript. 2026",
+    "slide10_PathwayPro_architecture.png": "Zhao Y et al, PathwayPro manuscript. 2026",
+    "slide11_A2C_NODE_architecture.png": "Zhao Y et al, A2C-NODE manuscript. 2026",
+    "slide12_CUED_AD_architecture.png": "Zhao Y et al, CUED-AD manuscript. 2026",
+    "slide10_disentangled_imaging.jpg": "Higgins I et al, ICLR. 2018",
+    "slide11_latent_ODE.png": "Rubanova Y et al, NeurIPS. 2019",
+    "slide11_ODE_RNN_comparison.jpg": "Rubanova Y et al, NeurIPS. 2019",
+    "slide12_trustworthy_AI.jpg": "U.S. FDA & EMA, Good AI Practice. 2026",
+    "slide12_UQ_review.jpg": "Wen J et al, Nat Mach Intell. 2024",
+}
+
+
+def lookup_ref(file: str, default: str = "") -> str:
+    """Return a short citation for an image file (matched by basename)."""
+    if not file:
+        return default
+    name = Path(str(file)).name
+    return REF_BY_FILE.get(name, default)

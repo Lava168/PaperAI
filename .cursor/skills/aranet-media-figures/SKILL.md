@@ -20,11 +20,22 @@ description: >-
 
 | Item | Path |
 |------|------|
-| PaperAI kit | `figure_kits/ara-net/` (this repo) |
+| PaperAI kit (all chapters) | `figure_kits/` — see [`MANIFEST.md`](../../../figure_kits/MANIFEST.md) |
+| ARA-Net MedIA kit | `figure_kits/ara-net/` |
 | Live ARA-Net scripts | `chapter1_foundation/ARA-Net/scripts/` |
-| Outputs | `ARA-Net/reports/v6_final_model/figures/` + sync `reports/brain_figures_fcstyle/figures/FigXX_*` |
+| Outputs | `ARA-Net/reports/v6_final_model/figures/` + `reports/brain_figures_fcstyle/figures/FigXX_*` |
 
-Prefer editing the live ARA-Net scripts, then syncing copies into `figure_kits/ara-net/scripts/` before committing to PaperAI.
+Prefer editing live chapter scripts, then syncing into `figure_kits/<kit>/` before committing to PaperAI.
+
+## Other chapter kits
+
+| Kit | Chapter |
+|-----|---------|
+| `figure_kits/neurogate/` | NeuroGate (keep metrics separate from ARA-Net) |
+| `figure_kits/pathwaypro/` | PathwayPro / disentangle |
+| `figure_kits/a2c-node/` | A2C-NODE |
+| `figure_kits/cued-ad/` | CUED-AD |
+| `figure_kits/shared/` | Workspace viz + PPT builders |
 
 ## Script map
 

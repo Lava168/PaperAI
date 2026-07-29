@@ -77,6 +77,9 @@ figure_kits/ara-net/
 .cursor/skills/aranet-media-figures/
 ```
 
+**Full workspace figure archive** (all chapters, ~95 scripts): see `figure_kits/MANIFEST.md`
+(`neurogate/`, `pathwaypro/`, `a2c-node/`, `cued-ad/`, `shared/`).
+
 See `figure_kits/ara-net/README.md` and invoke the skill **aranet-media-figures** when regenerating those figures.
 
 ## Frontend Console
