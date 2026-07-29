@@ -47,6 +47,12 @@ PaperAI/
     SUBMISSION_QUALITY_CHECKLIST.md
   config/
     agent_system.yaml
+  figure_kits/
+    ara-net/                 # MedIA / ARA-Net publication figure scripts
+  skills/
+    aranet-media-figures/    # pointer to Cursor skill
+  .cursor/skills/
+    aranet-media-figures/    # Cursor skill: regenerate/edit ARA-Net figures
   backend/
     server.py
   frontend/
@@ -61,6 +67,17 @@ PaperAI/
   .github/workflows/
     basic-checks.yml
 ```
+
+## ARA-Net MedIA figure kit
+
+Reusable matplotlib figure scripts and a Cursor skill for ARA-Net / MedIA-style panels (pipeline, atlas directionality, laser pathology outlines, error-group structure):
+
+```text
+figure_kits/ara-net/
+.cursor/skills/aranet-media-figures/
+```
+
+See `figure_kits/ara-net/README.md` and invoke the skill **aranet-media-figures** when regenerating those figures.
 
 ## Frontend Console
 
